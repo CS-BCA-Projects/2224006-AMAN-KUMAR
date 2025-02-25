@@ -24,9 +24,21 @@ const contactDetailSchema = new mongoose.Schema(
             required : true,
             max : 8
         },
+        lat : {
+            type : Number,
+            required : true
+        },
+        lon : {
+            type : Number,
+            required : true
+        },
         zone: { 
             type: mongoose.Schema.Types.ObjectId, 
             ref: "Zone" 
         },
     }
 );
+
+const ContactDetails = mongoose.model("ContactDetails", contactDetailSchema);
+
+export {ContactDetails};
