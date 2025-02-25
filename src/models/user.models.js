@@ -4,17 +4,8 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
 const UserSchema = new mongoose.Schema(
-    {
-        name: { 
-            type: String, 
-            required: true 
-        },
+    { 
         email: { 
-            type: String, 
-            required: true, 
-            unique: true 
-        },
-        phone: { 
             type: String, 
             required: true, 
             unique: true 
@@ -26,11 +17,6 @@ const UserSchema = new mongoose.Schema(
         role: { 
             type: String, 
             enum: ["User", "ZoneHead", "Admin", "SuperAdmin"], 
-            required: true 
-        },
-        zone: { 
-            type: mongoose.Schema.Types.ObjectId, 
-            ref: "Zone" 
         },
         status: { 
             type: String, 
@@ -42,7 +28,17 @@ const UserSchema = new mongoose.Schema(
                 type : mongoose.Schema.Types.ObjectId,
                 ref : "EventRequest"
             }
-        ]
+        ],
+        pastEventRequest : [
+            {
+                type : mongoose.Schema.Types.ObjectId,
+                ref : "EventRequest"
+            }
+        ],
+        refreshToken:{
+            type:String,
+        }
+
     }, {timestamps : true}
 );
 
@@ -84,4 +80,5 @@ UserSchema.methods.generateRefreshToken = function (){
 }
 
 const User = mongoose.model("User", UserSchema);
+
 export default User;
