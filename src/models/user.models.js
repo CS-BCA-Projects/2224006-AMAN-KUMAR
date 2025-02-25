@@ -16,7 +16,8 @@ const UserSchema = new mongoose.Schema(
         },
         role: { 
             type: String, 
-            enum: ["User", "ZoneHead", "Admin", "SuperAdmin"], 
+            enum: ["User", "ZoneHead", "Admin", "SuperAdmin"],
+            default : "User" 
         },
         status: { 
             type: String, 
@@ -37,6 +38,10 @@ const UserSchema = new mongoose.Schema(
         ],
         refreshToken:{
             type:String,
+        },
+        contactDetails : {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "ContactDetails"
         }
 
     }, {timestamps : true}
