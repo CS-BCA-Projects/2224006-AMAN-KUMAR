@@ -4,82 +4,85 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
 const UserSchema = new mongoose.Schema(
-    { 
-        email: { 
-            type: String, 
-            required: true, 
-            unique: true 
+    {
+        email: {
+            type: String,
+            required: true,
+            unique: true
         },
-        password: { 
-            type: String, 
-            required: true 
+        password: {
+            type: String,
+            required: true
         },
-        role: { 
-            type: String, 
+        role: {
+            type: String,
             enum: ["User", "ZoneHead", "Admin", "SuperAdmin"],
-            default : "User" 
+            default: "User"
         },
-        status: { 
-            type: String, 
-            enum: ["Active", "Inactive"], 
-            default: "Active" 
+        status: {
+            type: String,
+            enum: ["Active", "Inactive"],
+            default: "Active"
         },
-        recentEventRequest : [
+        recentEventRequest: [
             {
-                type : mongoose.Schema.Types.ObjectId,
-                ref : "EventRequest"
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "EventRequest"
             }
         ],
-        pastEventRequest : [
+        pastEventRequest: [
             {
-                type : mongoose.Schema.Types.ObjectId,
-                ref : "EventRequest"
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "EventRequest"
             }
         ],
-        refreshToken:{
-            type:String,
+        isVerified: { type: Boolean, default: false },
+        verificationToken: { type: String },
+        verificationTokenExpires: { type: Date },
+        refreshToken: {
+            type: String,
         },
-        contactDetails : {
-            type : mongoose.Schema.Types.ObjectId,
-            ref : "ContactDetails"
+        contactDetails: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "ContactDetails"
         }
 
-    }, {timestamps : true}
+    }, { timestamps: true }
 );
 
 UserSchema.plugin(mongooseAggregatePaginate);
 
-UserSchema.pre("save", async function(next) {
-    if(!this.isModified("password")) return next() // if password was not modified just return it not execute the fun
-    
-    this.password = await bcrypt.hash(this.password,10) //hashing the password
+UserSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next() // if password was not modified just return it not execute the fun
+
+    this.password = await bcrypt.hash(this.password, 10) //hashing the password
     next()
 })
 
-UserSchema.method.isPasswordCorrect = async function(password){
-    return await bcrypt.compare(password,this.password)
+UserSchema.method.isPasswordCorrect = async function (password) {
+    return await bcrypt.compare(password, this.password)
 }
 
-UserSchema.methods.generateAccessToken = function (){
+UserSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
-            email:this.email
+            email: this.email
         },
         process.env.ACCESS_TOKEN_KEY,
         {
-            expiresIn : process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         }
     )
 }
 
-UserSchema.methods.generateRefreshToken = function (){
+UserSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
-            email:this.email
+            email: this.email
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn : process.env.REFRESH_TOKEN_EXPIRY
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
     )
 }

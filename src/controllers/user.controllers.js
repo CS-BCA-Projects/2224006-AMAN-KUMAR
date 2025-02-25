@@ -5,6 +5,9 @@ import { ContactDetails } from '../models/contact_details.models.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { findLanLon } from '../utils/extractLatLon.js';
 
+import crypto from 'crypto';
+import sendEmail from '../utils/sendEmail.js';
+
 const registerUser = asyncHandler(async (req, res) => {
     // get  user details from frontend
 
@@ -26,10 +29,30 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User already exists")
     }
 
+    // Generate email verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours expiry
+
     const user = await User.create({
         email,
-        password
+        password,
+        isVerified: false,
+        verificationToken,
+        verificationTokenExpires
     });
+
+    // Send verification email
+    const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    const emailSent = await sendEmail(
+        email,
+        "Verify Your Email",
+        `<p>Click the link below to verify your email:</p>
+        <a href="${verificationLink}">Verify Email</a>`
+    );
+
+    if (!emailSent) {
+        throw new ApiError(500, "Error sending verification email");
+    }
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
@@ -41,6 +64,37 @@ const registerUser = asyncHandler(async (req, res) => {
         new ApiResponse(200,createdUser,"User Registered Successfully")
     )
 });
+
+const verifyEmail = asyncHandler(async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        throw new ApiError(400, "Invalid or missing token");
+    }
+
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user || user.verificationTokenExpires < Date.now()) {
+        throw new ApiError(400, "Invalid or expired token");
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+
+    // Redirect user to contact details page
+    // return res.redirect(`${process.env.CLIENT_URL}/contact-details?email=${user.email}`);
+
+    return res.status(200).json({
+        success: true,
+        message: "Email verified successfully",
+        redirectURL: `${process.env.CLIENT_URL}/contact-details?email=${user.email}`
+    });
+});
+
+
 
 const feedContact = asyncHandler(async (req, res) => {
     // Get user details from frontend
@@ -96,4 +150,4 @@ const feedContact = asyncHandler(async (req, res) => {
     }
 });
 
-export {registerUser,feedContact};
+export {registerUser,feedContact,verifyEmail};
