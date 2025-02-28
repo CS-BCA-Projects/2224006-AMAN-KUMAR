@@ -1,31 +1,50 @@
-import {asyncHandler} from '../utils/asyncHandler.js';
-import {ApiError} from "../utils/ApiError.js";
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiError } from "../utils/ApiError.js";
 import User from "../models/user.models.js"
 import { ContactDetails } from '../models/contact_details.models.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { findLanLon } from '../utils/extractLatLon.js';
+import jwt from "jsonwebtoken"
 
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
 
+
+// Temporary storage for unverified users
+const unverifiedUsers = new Map(); // Can replace with Redis for better persistence
+const generateAccessAndRefreshTokens = async(userId) => {
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+
+        user.refreshToken = refreshToken;
+        await user.save({validateBeforeSave : false})
+
+        return {accessToken,refreshToken}
+    } catch (error) {
+        throw new ApiError(500,"Something went wrong while generating access and refresh token")
+    }
+}
+
 const registerUser = asyncHandler(async (req, res) => {
     // get  user details from frontend
 
-    const {email,password} = req.body;
-    console.log("Email : ",email + "Password : ",password);
+    const { email, password } = req.body;
+    console.log("Email : ", email + "Password : ", password);
 
     //validate the filelds
 
-    if(
-        [email,password].some((field) => 
+    if (
+        [email, password].some((field) =>
             field?.trim() === "")
-    ){
-        throw new ApiError(400,"All Fields are required")
+    ) {
+        throw new ApiError(400, "All Fields are required")
     }
 
-    const existedUser = await User.findOne({email});
+    const existedUser = await User.findOne({ email });
 
-    if(existedUser){
+    if (existedUser) {
         throw new ApiError(409, "User already exists")
     }
 
@@ -33,11 +52,10 @@ const registerUser = asyncHandler(async (req, res) => {
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours expiry
 
-    const user = await User.create({
+    // Store user data temporarily (NOT in MongoDB yet)
+    unverifiedUsers.set(verificationToken, {
         email,
-        password,
-        isVerified: false,
-        verificationToken,
+        password, // In real-world use, hash the password before storing
         verificationTokenExpires
     });
 
@@ -51,18 +69,13 @@ const registerUser = asyncHandler(async (req, res) => {
     );
 
     if (!emailSent) {
+        unverifiedUsers.delete(verificationToken);
         throw new ApiError(500, "Error sending verification email");
     }
 
-    const createdUser = await User.findById(user._id).select("-password -refreshToken");
-
-    if(!createdUser){
-        throw new ApiError(500,"Something went wrong while registering a user")
-    }
-
     return res.status(201).json(
-        new ApiResponse(200,createdUser,"User Registered Successfully")
-    )
+        new ApiResponse(201, null, "Check your email to verify your account.")
+    );
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
@@ -72,34 +85,51 @@ const verifyEmail = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid or missing token");
     }
 
-    const user = await User.findOne({ verificationToken: token });
+    const storedUser = unverifiedUsers.get(token);
 
-    if (!user || user.verificationTokenExpires < Date.now()) {
+    // Check if the token is expired
+    if (!storedUser || storedUser.verificationTokenExpires < Date.now()) {
+        unverifiedUsers.delete(token); // ✅ Remove expired token
         throw new ApiError(400, "Invalid or expired token");
     }
 
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
-    await user.save();
+    // Save the user in MongoDB **AFTER** email verification
+    let user;
+    try {
+        user = await User.create({
+            email: storedUser.email,
+            password: storedUser.password, // Already hashed
+            isVerified: true
+        });
+    } catch (error) {
+        console.error("User creation error:", error);
+        throw new ApiError(500, "User could not be created in MongoDB");
+    }
 
+    // Ensure user is defined before proceeding
+    if (!user) {
+        throw new ApiError(500, "User creation failed, please try again.");
+    }
 
-    // Redirect user to contact details page
-    // return res.redirect(`${process.env.CLIENT_URL}/contact-details?email=${user.email}`);
+    // Remove from temporary storage
+    unverifiedUsers.delete(token);
 
-    return res.status(200).json({
-        success: true,
-        message: "Email verified successfully",
-        redirectURL: `${process.env.CLIENT_URL}/contact-details?email=${user.email}`
-    });
+    // Fetch the newly created user
+    const createdUser = await User.findById(user._id).select("-password");
+
+    if (!createdUser) {
+        throw new ApiError(500, "Something went wrong while retrieving the saved user.");
+    }
+
+    return res.status(201).json(
+        new ApiResponse(201, createdUser, "Email verified successfully. User registered.")
+    );
 });
-
-
 
 const feedContact = asyncHandler(async (req, res) => {
     // Get user details from frontend
     const { name, address, pinCode, phone } = req.body;
-    
+
     // Validate fields
     if ([name, address, pinCode, phone].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All Fields are required");
@@ -116,7 +146,7 @@ const feedContact = asyncHandler(async (req, res) => {
 
         console.log("Latitude:", location.lat);
         console.log("Longitude:", location.lon);
-        
+
         // Extract latitude and longitude
         const lat = location.lat;
         const lon = location.lon;
@@ -150,4 +180,123 @@ const feedContact = asyncHandler(async (req, res) => {
     }
 });
 
-export {registerUser,feedContact,verifyEmail};
+const loginUser = asyncHandler(async (req,res) =>{
+    //req body -> data
+    // email find user
+    //password check
+    //access and refresh token
+    //send cookie
+
+    const {email,password} = req.body
+
+    console.log("Email : ", email + "Password : ", password);
+
+    if(!email || !password){
+        throw new ApiError(400,"All feilds are required")
+    }
+    const user = await User.findOne({email})
+
+    if(!user) {
+        throw new ApiError(404, "User Does Not Exist");
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if(!isPasswordValid) {
+        throw new ApiError(401, "Password Incorrect");
+    }
+
+    const {accessToken,refreshToken} = await generateAccessAndRefreshTokens(user._id);
+
+    const loggeddInUser = await User.findById(user._id).select("-password -refreshToken");
+
+    const options = {
+        httpOnly : true,
+        secure : true
+    }
+
+    return res.status(200)
+    .cookie("accessToken",accessToken, options)
+    .cookie("refreshToken",refreshToken, options)
+    .json(
+        new ApiResponse(200,
+            {
+                user : loggeddInUser,accessToken,refreshToken
+            },
+            "User logged In Successfully"
+        )
+    )
+
+})
+
+const logoutUser = asyncHandler(async (req,res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set : {
+                refreshToken : undefined
+            }
+        },
+        {
+            new : true
+        }
+    )
+
+    const options = {
+        httpOnly : true,
+        secure : true
+    }
+
+    return res.status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+        new ApiResponse(200,{},"User Logged Out")
+    )
+})
+
+const refreshAccessToken = asyncHandler(async(req,res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (refreshAccessToken) {
+        throw new ApiError(401,"Unauthorised Access");
+    }
+
+    try {
+        const decodedToken = jwt.verify(
+            incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        )
+    
+        const user = await User.findById(decodedToken?._id);
+    
+        if (!user) {
+            throw new ApiError(401,"Invalid Refresh Token");
+        }
+    
+        if(incomingRefreshToken !== user?.refreshToken){
+            throw new ApiError(401, "Refresh access token is expired or used")
+        }
+    
+        const options = {
+            httpOnly : true,
+            secure : true
+        }
+    
+        const {accessToken,newRefreshToken} = await generateAccessAndRefreshTokens(user._id);
+    
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken",newRefreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {accessToken,newRefreshToken},
+                "Access token refreshed"
+            )
+        )
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid refresh token")
+    }
+})
+export { registerUser, feedContact, verifyEmail, loginUser, logoutUser,refreshAccessToken};

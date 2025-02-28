@@ -14,10 +14,10 @@ const UserSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        role: {
-            type: String,
-            enum: ["User", "ZoneHead", "Admin", "SuperAdmin"],
-            default: "User"
+        role: { 
+            type: String, 
+            enum: ["User", "SPHead", "Admin", "SuperAdmin"], 
+            default: "User" 
         },
         status: {
             type: String,
@@ -36,9 +36,16 @@ const UserSchema = new mongoose.Schema(
                 ref: "EventRequest"
             }
         ],
-        isVerified: { type: Boolean, default: false },
-        verificationToken: { type: String },
-        verificationTokenExpires: { type: Date },
+        isVerified: { 
+            type: Boolean,
+            default: false 
+        },
+        verificationToken: { 
+            type: String 
+        },
+        verificationTokenExpires: { 
+            type: Date 
+        },
         refreshToken: {
             type: String,
         },
@@ -59,7 +66,7 @@ UserSchema.pre("save", async function (next) {
     next()
 })
 
-UserSchema.method.isPasswordCorrect = async function (password) {
+UserSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password)
 }
 
@@ -68,7 +75,7 @@ UserSchema.methods.generateAccessToken = function () {
         {
             email: this.email
         },
-        process.env.ACCESS_TOKEN_KEY,
+        process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         }
@@ -78,7 +85,8 @@ UserSchema.methods.generateAccessToken = function () {
 UserSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
-            email: this.email
+            _id : this._id,
+            email : this.email
         },
         process.env.REFRESH_TOKEN_SECRET,
         {

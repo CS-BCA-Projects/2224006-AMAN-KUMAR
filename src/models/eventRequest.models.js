@@ -28,12 +28,12 @@ const EventRequestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Pending', 'Approved', 'Assigned', 'Completed'],
+      enum: ['Pending', 'Approved', 'Assigned', 'Completed', 'Rejected'],
       default: 'Pending'
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "ZoneHead"
+      ref: "SPHead"
     },
   }, {timestamps : true}
 );
