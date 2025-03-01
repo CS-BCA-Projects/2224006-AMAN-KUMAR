@@ -12,18 +12,20 @@ import sendEmail from '../utils/sendEmail.js';
 
 // Temporary storage for unverified users
 const unverifiedUsers = new Map(); // Can replace with Redis for better persistence
-const generateAccessAndRefreshTokens = async(userId) => {
+let passwordReset;
+
+const generateAccessAndRefreshTokens = async (userId) => {
     try {
         const user = await User.findById(userId)
         const accessToken = user.generateAccessToken()
         const refreshToken = user.generateRefreshToken()
 
         user.refreshToken = refreshToken;
-        await user.save({validateBeforeSave : false})
+        await user.save({ validateBeforeSave: false })
 
-        return {accessToken,refreshToken}
+        return { accessToken, refreshToken }
     } catch (error) {
-        throw new ApiError(500,"Something went wrong while generating access and refresh token")
+        throw new ApiError(500, "Something went wrong while generating access and refresh token")
     }
 }
 
@@ -180,85 +182,88 @@ const feedContact = asyncHandler(async (req, res) => {
     }
 });
 
-const loginUser = asyncHandler(async (req,res) =>{
+const loginUser = asyncHandler(async (req, res) => {
     //req body -> data
     // email find user
     //password check
     //access and refresh token
     //send cookie
 
-    const {email,password} = req.body
+    const { email, password } = req.body
 
     console.log("Email : ", email + "Password : ", password);
 
-    if(!email || !password){
-        throw new ApiError(400,"All feilds are required")
+    if (!email || !password) {
+        throw new ApiError(400, "All feilds are required")
     }
-    const user = await User.findOne({email})
+    const user = await User.findOne({ email })
 
-    if(!user) {
+    if (!user) {
         throw new ApiError(404, "User Does Not Exist");
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
-    if(!isPasswordValid) {
+    if (!isPasswordValid) {
         throw new ApiError(401, "Password Incorrect");
     }
 
-    const {accessToken,refreshToken} = await generateAccessAndRefreshTokens(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
     const loggeddInUser = await User.findById(user._id).select("-password -refreshToken");
 
     const options = {
-        httpOnly : true,
-        secure : true
+        httpOnly: true,
+        secure: true
     }
 
     return res.status(200)
-    .cookie("accessToken",accessToken, options)
-    .cookie("refreshToken",refreshToken, options)
-    .json(
-        new ApiResponse(200,
-            {
-                user : loggeddInUser,accessToken,refreshToken
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json({
+            status: "success",
+            message: "Login successful",
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role
             },
-            "User logged In Successfully"
-        )
-    )
+            accessToken,
+            refreshToken
+        });
 
 })
 
-const logoutUser = asyncHandler(async (req,res) => {
+const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set : {
-                refreshToken : undefined
+            $set: {
+                refreshToken: undefined
             }
         },
         {
-            new : true
+            new: true
         }
     )
 
     const options = {
-        httpOnly : true,
-        secure : true
+        httpOnly: true,
+        secure: true
     }
 
     return res.status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
-    .json(
-        new ApiResponse(200,{},"User Logged Out")
-    )
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(
+            new ApiResponse(200, {}, "User Logged Out")
+        )
 })
 
-const refreshAccessToken = asyncHandler(async(req,res) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
-    if (refreshAccessToken) {
-        throw new ApiError(401,"Unauthorised Access");
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "Unauthorised Access");
     }
 
     try {
@@ -266,37 +271,170 @@ const refreshAccessToken = asyncHandler(async(req,res) => {
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET
         )
-    
+
         const user = await User.findById(decodedToken?._id);
-    
+
         if (!user) {
-            throw new ApiError(401,"Invalid Refresh Token");
+            throw new ApiError(401, "Invalid Refresh Token");
         }
-    
-        if(incomingRefreshToken !== user?.refreshToken){
+
+        if (incomingRefreshToken !== user?.refreshToken) {
             throw new ApiError(401, "Refresh access token is expired or used")
         }
-    
+
         const options = {
-            httpOnly : true,
-            secure : true
+            httpOnly: true,
+            secure: true
         }
-    
-        const {accessToken,newRefreshToken} = await generateAccessAndRefreshTokens(user._id);
-    
+
+        const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+
         return res
-        .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken",newRefreshToken, options)
-        .json(
-            new ApiResponse(
-                200,
-                {accessToken,newRefreshToken},
-                "Access token refreshed"
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json(
+                new ApiResponse(
+                    200,
+                    { accessToken, newRefreshToken },
+                    "Access token refreshed"
+                )
             )
-        )
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
 })
-export { registerUser, feedContact, verifyEmail, loginUser, logoutUser,refreshAccessToken};
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.user?._id);
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if (!isPasswordCorrect) {
+        throw new ApiError(404, "Password Incorrect");
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, "Password has been changed")
+        )
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+    //get url to forgot password
+    //get email newpass and cnfPass
+    //local storage for newPAss
+    //send an email to verify and edit it 
+    const { email, newPassword, cnfPassword } = req.body;
+
+    const existedUser = await User.findOne({ email });
+
+    if (!existedUser) {
+        throw new ApiError(400, "User not found")
+    }
+
+    if (newPassword !== cnfPassword) {
+        throw new ApiError(400, "Password does not match")
+    }
+
+    // Generate email verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours expiry
+
+    // Store user data temporarily (NOT in MongoDB yet)
+    unverifiedUsers.set(verificationToken, {
+        email,
+        newPassword, // In real-world use, hash the password before storing
+        verificationTokenExpires
+    });
+
+    // Send verification email
+    const verificationLink = `${process.env.CLIENT_URL_RESET_PASSWORD}/reset-password?token=${verificationToken}`;
+    const emailSent = await sendEmail(
+        email,
+        "[AWGP Seva Portal] Please reset you password",
+        `<p>Reset your AWGP SEVA PORTAl password:</p>
+        <a href="${verificationLink}">Verify Email</a>`
+    );
+
+
+
+    if (!emailSent) {
+        unverifiedUsers.delete(verificationToken);
+        throw new ApiError(500, "Error sending verification email");
+    }
+
+    return res.status(200)
+        .json("Reset password link has been sent to your registered email Id")
+
+})
+
+const resetPassword = asyncHandler(async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        throw new ApiError(400, "Invalid or missing token");
+    }
+
+    const storedUser = unverifiedUsers.get(token);
+
+    // Check if the token is expired
+    if (!storedUser || storedUser.verificationTokenExpires < Date.now()) {
+        unverifiedUsers.delete(token); // ✅ Remove expired token
+        throw new ApiError(400, "Invalid or expired token");
+    }
+
+    // Save the user in MongoDB **AFTER** email verification
+
+    const {email,newPassword} = storedUser;
+
+    const user = await User.findOne({email});
+    try {
+        user.password = newPassword;
+        await user.save({ validateBeforeSave: false });
+    } catch (error) {
+        console.error("Error in reseting the password:", error);
+        throw new ApiError(500, "User password could not be reseet in MongoDB");
+    }
+
+    // Ensure user is defined before proceeding
+    if (!user) {
+        throw new ApiError(500, "Paaword reset failed, please try again.");
+    }
+
+    // Remove from temporary storage
+    unverifiedUsers.delete(token);
+
+    // Fetch the newly created user
+    const createdUser = await User.findById(user._id).select("-password");
+
+    if (!createdUser) {
+        throw new ApiError(500, "Something went wrong while retrieving the saved user.");
+    }
+
+    return res.status(201).json(
+        new ApiResponse(201, createdUser, "Email verified successfully. User password reset successfull.")
+    );
+});
+
+const getCurrentUser = asyncHandler(async (req,res) => {
+    return res.status(200)
+    .json(200,
+        req.user,
+        "Current user fetched successsfully"
+    )
+})
+
+export { registerUser, 
+    feedContact, 
+    verifyEmail, 
+    loginUser, 
+    logoutUser, 
+    refreshAccessToken, 
+    forgotPassword,
+    resetPassword 
+};

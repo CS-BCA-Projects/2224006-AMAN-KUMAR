@@ -62,6 +62,14 @@ UserSchema.plugin(mongooseAggregatePaginate);
 UserSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next() // if password was not modified just return it not execute the fun
 
+    if (!this.password) {
+        if (this.role === "SPHead" || this.role === "Admin") {
+            this.password = "gurudev123";  // Set default password
+        } else {
+            return next();
+        }
+    }
+
     this.password = await bcrypt.hash(this.password, 10) //hashing the password
     next()
 })
@@ -73,7 +81,9 @@ UserSchema.methods.isPasswordCorrect = async function (password) {
 UserSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
-            email: this.email
+            _id : this._id,
+            email: this.email,
+            role: this.role
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
