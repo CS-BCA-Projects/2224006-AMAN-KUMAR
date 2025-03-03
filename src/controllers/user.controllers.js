@@ -191,8 +191,6 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const { email, password } = req.body
 
-    console.log("Email : ", email + "Password : ", password);
-
     if (!email || !password) {
         throw new ApiError(400, "All feilds are required")
     }
@@ -215,6 +213,27 @@ const loginUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     }
+
+    console.log(user);
+
+    // Set up session (implementation not shown)
+    // switch (user.role) {
+    //     case 'User':
+    //         res.json({ success: true, redirectUrl: "/user-dashboard" });
+    //         break;
+    //     case 'SPHead':
+    //         res.json({ success: true, redirectUrl: "/sphead-dashboard" });
+    //         break;
+    //     case 'Admin':
+    //         res.json({ success: true, redirectUrl: "/admin-dashboard" });
+    //         break;
+    //     case 'SuperAdmin':
+    //         res.json({ success: true, redirectUrl: "/superadmin-dashboard" });
+    //         break;
+    //     default:
+    //         res.status(403).json({ success: false, message: "Unauthorized access" });
+    // }
+    
 
     return res.status(200)
         .cookie("accessToken", accessToken, options)
@@ -369,7 +388,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     }
 
     return res.status(200)
-        .json("Reset password link has been sent to your registered email Id")
+        .json(new ApiResponse(200,{},"Reset password link has been sent to your registered email Id"))
 
 })
 
@@ -423,11 +442,35 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 const getCurrentUser = asyncHandler(async (req,res) => {
     return res.status(200)
-    .json(200,
+    .json(new ApiResponse(200,
         req.user,
-        "Current user fetched successsfully"
+        "Current user fetched successsfully")
     )
 })
+
+const updateAccountDetails = asyncHandler(async(req, res) => {
+    const {fullName, email} = req.body
+
+    if (!fullName || !email) {
+        throw new ApiError(400, "All fields are required")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullName,
+                email: email
+            }
+        },
+        {new: true}
+        
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"))
+});
 
 export { registerUser, 
     feedContact, 
