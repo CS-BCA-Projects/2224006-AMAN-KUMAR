@@ -7,7 +7,7 @@ const router = Router();
 
 // Correct way to define routes
 router.route("/register").post(registerUser);
-router.route("/register/contactDetails").post(feedContact);
+router.route("/register/contactDetails").post(verifyJWT,feedContact);
 router.get("/register/verify-email", verifyEmail); // Verification route
 router.route("/login").post(loginUser)
 router.route("/login/forgot-password").post(forgotPassword)

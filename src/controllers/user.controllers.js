@@ -95,13 +95,16 @@ const verifyEmail = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid or expired token");
     }
 
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(createdUser._id);
+
     // Save the user in MongoDB **AFTER** email verification
     let user;
     try {
         user = await User.create({
             email: storedUser.email,
             password: storedUser.password, // Already hashed
-            isVerified: true
+            isVerified: true,
+            refreshToken
         });
     } catch (error) {
         console.error("User creation error:", error);
@@ -116,14 +119,23 @@ const verifyEmail = asyncHandler(async (req, res) => {
     // Remove from temporary storage
     unverifiedUsers.delete(token);
 
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
     // Fetch the newly created user
     const createdUser = await User.findById(user._id).select("-password");
+
 
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while retrieving the saved user.");
     }
 
-    return res.status(201).json(
+    return res.status(201)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
         new ApiResponse(201, createdUser, "Email verified successfully. User registered.")
     );
 });
@@ -161,6 +173,7 @@ const feedContact = asyncHandler(async (req, res) => {
 
         //Store data in database
         const contacts = await ContactDetails.create({
+            user_id : req.user_id,
             name,
             address,
             state,
