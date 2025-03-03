@@ -130,10 +130,11 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
 const feedContact = asyncHandler(async (req, res) => {
     // Get user details from frontend
-    const { name, address, pinCode, phone } = req.body;
+    console.log(req.body);
+    const { name, address,state,district, pinCode, phone } = req.body;
 
     // Validate fields
-    if ([name, address, pinCode, phone].some((field) => field?.trim() === "")) {
+    if ([name,address,state,district,pinCode,phone].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All Fields are required");
     }
 
@@ -162,6 +163,8 @@ const feedContact = asyncHandler(async (req, res) => {
         const contacts = await ContactDetails.create({
             name,
             address,
+            state,
+            district,
             pinCode,
             phone,
             lat,
