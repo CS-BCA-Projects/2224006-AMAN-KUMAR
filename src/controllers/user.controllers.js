@@ -95,8 +95,6 @@ const verifyEmail = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid or expired token");
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(createdUser._id);
-
     // Save the user in MongoDB **AFTER** email verification
     let user;
     try {
@@ -104,7 +102,6 @@ const verifyEmail = asyncHandler(async (req, res) => {
             email: storedUser.email,
             password: storedUser.password, // Already hashed
             isVerified: true,
-            refreshToken
         });
     } catch (error) {
         console.error("User creation error:", error);
@@ -123,6 +120,8 @@ const verifyEmail = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
     // Fetch the newly created user
     const createdUser = await User.findById(user._id).select("-password");
