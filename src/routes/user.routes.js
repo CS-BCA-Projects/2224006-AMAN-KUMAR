@@ -1,14 +1,20 @@
 import { Router } from 'express';
-import { registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword} from '../controllers/user.controllers.js';
+import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage} from '../controllers/user.controllers.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { authorizeRoles } from '../middlewares/authorizeRole.middleware.js';
 
 const router = Router();
 
 // Correct way to define routes
+router.get("/dashboard",dashboard)
+router.get("/dashboard/login",login)
+router.get("/sign-up",signUp)
+router.get("/verifyEmailForSignup",verifyEmailPage)
+router.get("/contact-details",verifyJWT,contactDetails)
+router.get('/login/reset-password',resetPasswordPage)
 router.route("/register").post(registerUser);
-router.route("/register/contactDetails").post(verifyJWT,feedContact);
 router.get("/register/verify-email", verifyEmail); // Verification route
+router.route("/submit-contactDetails").post(verifyJWT,feedContact);
 router.route("/login").post(loginUser)
 router.route("/login/forgot-password").post(forgotPassword)
 router.get("/login/reset-password",resetPassword)

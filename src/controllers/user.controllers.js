@@ -29,18 +29,23 @@ const generateAccessAndRefreshTokens = async (userId) => {
     }
 }
 
-const registerUser = asyncHandler(async (req, res) => {
-    // get  user details from frontend
+const dashboard = asyncHandler(async (req, res) => {
+    res.render("dashboard")
+})
 
+const login = asyncHandler(async (req, res) => {
+    res.render('login');
+});
+
+const signUp = asyncHandler(async (req, res) => {
+    res.render('signup')
+});
+
+const registerUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     console.log("Email : ", email + "Password : ", password);
 
-    //validate the filelds
-
-    if (
-        [email, password].some((field) =>
-            field?.trim() === "")
-    ) {
+    if ([email, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All Fields are required")
     }
 
@@ -75,10 +80,19 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Error sending verification email");
     }
 
-    return res.status(201).json(
-        new ApiResponse(201, null, "Check your email to verify your account.")
-    );
+    // ✅ Redirect to verifyEmailForSignup page
+    res.status(200).json({
+        success: true,
+        message: "Verification email sent!",
+        redirectUrl: `/api/v1/verifyEmailForSignup?email=${email}`
+    })
 });
+
+const verifyEmailPage = asyncHandler((req, res) => {
+    const email = req.query.email; // Get email from query parameter
+    res.render("verifyEmailForSignup", { email }); // Pass email to EJS
+});
+
 
 const verifyEmail = asyncHandler(async (req, res) => {
     const { token } = req.query;
@@ -91,61 +105,81 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
     // Check if the token is expired
     if (!storedUser || storedUser.verificationTokenExpires < Date.now()) {
-        unverifiedUsers.delete(token); // ✅ Remove expired token
+        unverifiedUsers.delete(token); //Remove expired token
         throw new ApiError(400, "Invalid or expired token");
     }
 
-    // Save the user in MongoDB **AFTER** email verification
-    let user;
     try {
-        user = await User.create({
+        // Save the user in MongoDB after verification
+        const user = await User.create({
             email: storedUser.email,
             password: storedUser.password, // Already hashed
             isVerified: true,
         });
+
+        // Ensure user is defined
+        if (!user) {
+            throw new ApiError(500, "User creation failed, please try again.");
+        }
+
+        // Remove from temporary storage after successful creation
+        unverifiedUsers.delete(token);
+
+        // Secure cookie options
+        const options = {
+            httpOnly: true,
+            secure: true,
+        };
+
+        // Fetch newly created user
+        const createdUser = await User.findById(user._id).select("-password");
+        if (!createdUser) {
+            throw new ApiError(500, "Error retrieving saved user.");
+        }
+
+        // Generate access & refresh tokens
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(createdUser._id);
+        if (!accessToken || !refreshToken) {
+            throw new ApiError(500, "Failed to generate authentication tokens.");
+        }
+
+        res.cookie("accessToken", accessToken, options)
+           .cookie("refreshToken", refreshToken, options)
+
+        // Redirect user to complete profile (or handle frontend response)
+          .redirect(`http://localhost:4001/api/v1/contact-details`);
+
+        // return res.status(200)
+        // .cookie("accessToken" , accessToken, options)
+        // .cookie("refreshToken", refreshToken,options)
+        // .json({
+        //     status: "success",
+        //     message: "Email Verification successful",
+        //     redirectUrl : `/api/vi/submit-contactDetails`
+        // });
+        
     } catch (error) {
-        console.error("User creation error:", error);
-        throw new ApiError(500, "User could not be created in MongoDB");
+        console.error("Error in email verification:", error);
+        throw new ApiError(500, "Internal Server Error");
     }
-
-    // Ensure user is defined before proceeding
-    if (!user) {
-        throw new ApiError(500, "User creation failed, please try again.");
-    }
-
-    // Remove from temporary storage
-    unverifiedUsers.delete(token);
-
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
-
-    // Fetch the newly created user
-    const createdUser = await User.findById(user._id).select("-password");
-
-
-    if (!createdUser) {
-        throw new ApiError(500, "Something went wrong while retrieving the saved user.");
-    }
-
-    return res.status(201)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-        new ApiResponse(201, createdUser, "Email verified successfully. User registered.")
-    );
 });
+
+// Serve Contact Details Page
+const contactDetails = asyncHandler(async (req, res) => {
+    res.render("contactDetails"); // Pass it to the template
+});
+
+const resetPasswordPage = asyncHandler(async(req,res) =>{
+    res.render('resetPassword')
+})
 
 const feedContact = asyncHandler(async (req, res) => {
     // Get user details from frontend
     console.log(req.body);
-    const { name, address,state,district, pinCode, phone } = req.body;
+    const { name, address, state, district, pinCode, phone } = req.body;
 
     // Validate fields
-    if ([name,address,state,district,pinCode,phone].some((field) => field?.trim() === "")) {
+    if ([name, address, state, district, pinCode, phone].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All Fields are required");
     }
 
@@ -170,9 +204,9 @@ const feedContact = asyncHandler(async (req, res) => {
         console.log("Pin Code:", pinCode);
         console.log("Phone Number:", phone);
 
-        //Store data in database
+        //Store data in databas
         const contacts = await ContactDetails.create({
-            user_id : req.user_id,
+            user_id: req.user._id,
             name,
             address,
             state,
@@ -187,9 +221,11 @@ const feedContact = asyncHandler(async (req, res) => {
             throw new ApiError(500, "Something went wrong while registering user contact details");
         }
 
-        return res.status(201).json(
-            new ApiResponse(200, contacts, "User contact details Registered Successfully")
-        );
+        return res.status(201).json({
+            success: true,
+            message: "User Registration completed, Data saved Succesfully",
+            redirectUrl: `/api/v1/dashboard/login`
+        })
 
     } catch (error) {
         console.error("Error:", error);
@@ -205,6 +241,7 @@ const loginUser = asyncHandler(async (req, res) => {
     //send cookie
 
     const { email, password } = req.body
+    console.log(email, password)
 
     if (!email || !password) {
         throw new ApiError(400, "All feilds are required")
@@ -248,7 +285,7 @@ const loginUser = asyncHandler(async (req, res) => {
     //     default:
     //         res.status(403).json({ success: false, message: "Unauthorized access" });
     // }
-    
+
 
     return res.status(200)
         .cookie("accessToken", accessToken, options)
@@ -264,7 +301,6 @@ const loginUser = asyncHandler(async (req, res) => {
             accessToken,
             refreshToken
         });
-
 })
 
 const logoutUser = asyncHandler(async (req, res) => {
@@ -403,7 +439,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     }
 
     return res.status(200)
-        .json(new ApiResponse(200,{},"Reset password link has been sent to your registered email Id"))
+        .json(new ApiResponse(200, {}, "Reset password link has been sent to your registered email Id"))
 
 })
 
@@ -424,9 +460,9 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     // Save the user in MongoDB **AFTER** email verification
 
-    const {email,newPassword} = storedUser;
+    const { email, newPassword } = storedUser;
 
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
     try {
         user.password = newPassword;
         await user.save({ validateBeforeSave: false });
@@ -455,16 +491,16 @@ const resetPassword = asyncHandler(async (req, res) => {
     );
 });
 
-const getCurrentUser = asyncHandler(async (req,res) => {
+const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200)
-    .json(new ApiResponse(200,
-        req.user,
-        "Current user fetched successsfully")
-    )
+        .json(new ApiResponse(200,
+            req.user,
+            "Current user fetched successsfully")
+        )
 })
 
-const updateAccountDetails = asyncHandler(async(req, res) => {
-    const {fullName, email} = req.body
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullName, email } = req.body
 
     if (!fullName || !email) {
         throw new ApiError(400, "All fields are required")
@@ -478,21 +514,31 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
                 email: email
             }
         },
-        {new: true}
-        
+        { new: true }
+
     ).select("-password")
 
     return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"))
+        .status(200)
+        .json(new ApiResponse(200, user, "Account details updated successfully"))
 });
 
-export { registerUser, 
-    feedContact, 
-    verifyEmail, 
-    loginUser, 
-    logoutUser, 
-    refreshAccessToken, 
+export {
+    dashboard,
+    login,
+    signUp,
+    contactDetails,
+    verifyEmailPage,
+    resetPasswordPage,
+    registerUser,
+    feedContact,
+    verifyEmail,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
     forgotPassword,
-    resetPassword 
+    resetPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    changeCurrentPassword
 };
