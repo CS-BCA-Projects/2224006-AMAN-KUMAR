@@ -47,8 +47,10 @@ app.use(express.static(path.join(__dirname, "../frontend/public")));
 //router import
 import Router from './routes/user.routes.js'
 
+
 //routes
 
 app.use("/api/v1",Router);
+
 
 export {app}

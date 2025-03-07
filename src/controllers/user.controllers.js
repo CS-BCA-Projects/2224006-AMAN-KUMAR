@@ -1,13 +1,14 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from "../utils/ApiError.js";
 import User from "../models/user.models.js"
-import { ContactDetails } from '../models/contact_details.models.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { findLanLon } from '../utils/extractLatLon.js';
 import jwt from "jsonwebtoken"
 
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
+import EventRequest from '../models/eventRequest.models.js';
+import { getNearestSPHead } from '../utils/findNearestSPHeaad.js';
 
 
 // Temporary storage for unverified users
@@ -93,7 +94,6 @@ const verifyEmailPage = asyncHandler((req, res) => {
     res.render("verifyEmailForSignup", { email }); // Pass email to EJS
 });
 
-
 const verifyEmail = asyncHandler(async (req, res) => {
     const { token } = req.query;
 
@@ -146,17 +146,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
         res.cookie("accessToken", accessToken, options)
            .cookie("refreshToken", refreshToken, options)
 
-        // Redirect user to complete profile (or handle frontend response)
           .redirect(`http://localhost:4001/api/v1/contact-details`);
-
-        // return res.status(200)
-        // .cookie("accessToken" , accessToken, options)
-        // .cookie("refreshToken", refreshToken,options)
-        // .json({
-        //     status: "success",
-        //     message: "Email Verification successful",
-        //     redirectUrl : `/api/vi/submit-contactDetails`
-        // });
         
     } catch (error) {
         console.error("Error in email verification:", error);
@@ -175,8 +165,10 @@ const resetPasswordPage = asyncHandler(async(req,res) =>{
 
 const feedContact = asyncHandler(async (req, res) => {
     // Get user details from frontend
-    console.log(req.body);
+    const user_id = req.user._id;
     const { name, address, state, district, pinCode, phone } = req.body;
+
+    const user = await User.findById(user_id);
 
     // Validate fields
     if ([name, address, state, district, pinCode, phone].some((field) => field?.trim() === "")) {
@@ -204,27 +196,25 @@ const feedContact = asyncHandler(async (req, res) => {
         console.log("Pin Code:", pinCode);
         console.log("Phone Number:", phone);
 
-        //Store data in databas
-        const contacts = await ContactDetails.create({
-            user_id: req.user._id,
-            name,
-            address,
-            state,
-            district,
-            pinCode,
-            phone,
-            lat,
-            lon
-        });
-
-        if (!contacts) {
-            throw new ApiError(500, "Something went wrong while registering user contact details");
+        try {
+            user.name = name;
+            user.address = address;
+            user.state = state;
+            user.district = district;
+            user.pinCode = pinCode;
+            user.phone = phone;
+            user.lat = lat;
+            user.lon = lon;
+            await user.save({ validateBeforeSave: false });
+        } catch (error) {
+            console.error("Error in saving contact details:", error);
+            throw new ApiError(500, "Contact details could not be saved in MongoDB");
         }
 
         return res.status(201).json({
             success: true,
             message: "User Registration completed, Data saved Succesfully",
-            redirectUrl: `/api/v1/dashboard/login`
+            redirectUrl: `/api/v1/login`
         })
 
     } catch (error) {
@@ -234,12 +224,6 @@ const feedContact = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-    //req body -> data
-    // email find user
-    //password check
-    //access and refresh token
-    //send cookie
-
     const { email, password } = req.body
     console.log(email, password)
 
@@ -259,7 +243,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
-    const loggeddInUser = await User.findById(user._id).select("-password -refreshToken");
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
     const options = {
         httpOnly: true,
@@ -268,39 +252,42 @@ const loginUser = asyncHandler(async (req, res) => {
 
     console.log(user);
 
-    // Set up session (implementation not shown)
-    // switch (user.role) {
-    //     case 'User':
-    //         res.json({ success: true, redirectUrl: "/user-dashboard" });
-    //         break;
-    //     case 'SPHead':
-    //         res.json({ success: true, redirectUrl: "/sphead-dashboard" });
-    //         break;
-    //     case 'Admin':
-    //         res.json({ success: true, redirectUrl: "/admin-dashboard" });
-    //         break;
-    //     case 'SuperAdmin':
-    //         res.json({ success: true, redirectUrl: "/superadmin-dashboard" });
-    //         break;
-    //     default:
-    //         res.status(403).json({ success: false, message: "Unauthorized access" });
-    // }
+    //Set up session (implementation not shown)
+    switch (user.role) {
+        case 'User':
+            res.status(200)
+                .cookie("accessToken", accessToken, options)
+                .cookie("refreshToken", refreshToken, options)
+                .json({ success: true, redirectUrl: "/api/v1/user-dashboard" });
+            break;
+        case 'SPHead':
+            res.json({ success: true, redirectUrl: "/sphead-dashboard" });
+            break;
+        case 'Admin':
+            res.json({ success: true, redirectUrl: "/admin-dashboard" });
+            break;
+        case 'SuperAdmin':
+            res.json({ success: true, redirectUrl: "/superadmin-dashboard" });
+            break;
+        default:
+            res.status(403).json({ success: false, message: "Unauthorized access" });
+    }
 
 
-    return res.status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        .json({
-            status: "success",
-            message: "Login successful",
-            user: {
-                id: user._id,
-                email: user.email,
-                role: user.role
-            },
-            accessToken,
-            refreshToken
-        });
+    // return res.status(200)
+    //     .cookie("accessToken", accessToken, options)
+    //     .cookie("refreshToken", refreshToken, options)
+    //     .json({
+    //         status: "success",
+    //         message: "Login successful",
+    //         user: {
+    //             id: user._id,
+    //             email: user.email,
+    //             role: user.role
+    //         },
+    //         accessToken,
+    //         refreshToken
+    //     });
 })
 
 const logoutUser = asyncHandler(async (req, res) => {
@@ -523,6 +510,121 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "Account details updated successfully"))
 });
 
+const getLoggedInUserDetails = asyncHandler(async (req,res) => {
+    try {
+        const userDetails = await User.aggregate([
+            {
+                $match: { _id: new mongoose.Types.ObjectId(userId) }
+            },
+            {
+                $lookup: {
+                    from: "eventrequests",
+                    localField: "_id",
+                    foreignField: "user",
+                    as: "allEvents"
+                }
+            },
+            {
+                $addFields: {
+                    recentEventRequest: {
+                        $filter: {
+                            input: "$allEvents",
+                            as: "event",
+                            cond: { $eq: ["$$event.status", "Pending"] }
+                        }
+                    },
+                    completedEventRequest: {
+                        $filter: {
+                            input: "$allEvents",
+                            as: "event",
+                            cond: { $eq: ["$$event.status", "Completed"] }
+                        }
+                    },
+                    rejectedEventRequest: {
+                        $filter: {
+                            input: "$allEvents",
+                            as: "event",
+                            cond: { $eq: ["$$event.status", "Rejected"] }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    email: 1,
+                    phone: 1,
+                    state: 1,
+                    district: 1,
+                    address: 1,
+                    pinCode: 1,
+                    recentEventRequest: 1,
+                    completedEventRequest: 1,
+                    rejectedEventRequest: 1
+                }
+            }
+        ]);
+
+        return userDetails[0] || null; // Return the first result or null if not found
+    } catch (error) {
+        console.error("Error fetching user details:", error);
+        throw new Error("Failed to fetch user details.");
+    }
+});
+
+const userDashboard = asyncHandler(async(req,res) => {
+    const user = req.user;
+    const events = undefined;
+    res.render('userDashboard',{user,events});
+})
+const addEvent = asyncHandler(async(req,res) => {
+    res.render('addEvent');
+});
+
+const registerEvent = asyncHandler(async (req, res) => {
+    const user = req.user;
+
+    if (!user) {
+        throw new ApiError("User not found")
+    }
+
+    const { eventType, requested_date, requested_time, description } = req.body;
+    console.log("Event"+ eventType,"\nRequested Date : "+ requested_date,"\nRequested Time : "+ requested_time)
+
+    if ([eventType, requested_date, requested_time, description].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "All Fields are required")
+    }
+
+    const requestedEvent = await EventRequest.create({
+        user_id: user._id,
+        eventType,
+        requested_date,
+        requested_time,
+        description
+    })
+
+    if (!requestedEvent) {
+        throw new ApiError("Event registration failed. Please retry.")
+    }
+
+    const eventAssignedTo = await getNearestSPHead(user.lat, user.lon, user.state, user.district);
+
+    if (!eventAssignedTo) {
+        return new ApiResponse(200,{},"Event request is not available at your place")
+    }
+
+    console.log(eventAssignedTo);
+    return res.status(200)
+        .json({
+            success: true,
+            message: "User Registration completed, Data saved Succesfully",
+            redirectUrl: `/api/v1/user-dashboard`
+    });
+
+})
+
+
 export {
     dashboard,
     login,
@@ -530,6 +632,8 @@ export {
     contactDetails,
     verifyEmailPage,
     resetPasswordPage,
+    userDashboard,
+    addEvent,
     registerUser,
     feedContact,
     verifyEmail,
@@ -540,5 +644,7 @@ export {
     resetPassword,
     getCurrentUser,
     updateAccountDetails,
-    changeCurrentPassword
+    changeCurrentPassword,
+    getLoggedInUserDetails,
+    registerEvent
 };

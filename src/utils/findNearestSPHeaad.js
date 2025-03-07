@@ -1,11 +1,16 @@
-import { haversineDistance } from "./haversineDistance";
-import User from "../models/user.models";
+import { haversineDistance } from "./haversineDistance.js";
+import { asyncHandler } from "./asyncHandler.js";
+import { ApiError } from "./ApiError.js";
+import { getMatchingSPHeads } from "./getMatchingSPHeads.js";
 
-try {
-    // Find the nearest SPHead within 15 km using Haversine formula
-    function findNearestSPHead(userLat, userLon) {
+const getNearestSPHead = asyncHandler(async function findNearestSPHead(userLat, userLon, userState, userDistrict) {
+    try {
         let nearestSPHead = null;
         let minDistance = Infinity;
+
+        console.log(userDistrict)
+        const spHeads = await getMatchingSPHeads(userState,userDistrict);
+        console.log(spHeads);
     
         for (const spHead of spHeads) {
             const distance = haversineDistance(userLat, userLon, spHead.lat, spHead.lon);
@@ -19,8 +24,10 @@ try {
             }
         }
     
-        return nearestSPHead; // Returns null if no SPHead is found within range
+        return nearestSPHead; // Returns null if no SPHead is found within range)
+    } catch (error) {
+        throw new ApiError("Something went wrong, please retry");
     }
-} catch (error) {
-    
-}
+});
+
+export {getNearestSPHead};

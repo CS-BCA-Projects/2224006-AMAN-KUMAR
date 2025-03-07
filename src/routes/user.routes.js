@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage} from '../controllers/user.controllers.js';
+import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent} from '../controllers/user.controllers.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { authorizeRoles } from '../middlewares/authorizeRole.middleware.js';
 
@@ -7,7 +7,7 @@ const router = Router();
 
 // Correct way to define routes
 router.get("/dashboard",dashboard)
-router.get("/dashboard/login",login)
+router.get("/login",login)
 router.get("/sign-up",signUp)
 router.get("/verifyEmailForSignup",verifyEmailPage)
 router.get("/contact-details",verifyJWT,contactDetails)
@@ -22,15 +22,16 @@ router.get("/login/reset-password",resetPassword)
 //secured routes
 router.route("/logout").post(verifyJWT, logoutUser)
 router.route("/refresh-token",refreshAccessToken)
+router.route('/add-event').post(verifyJWT,registerEvent);
+
 
 // Protected Routes
-router.get("/user-dashboard", verifyJWT, authorizeRoles("User"), (req, res) => {
-    res.json({ message: "Welcome to User Dashboard" });
-});
+router.get("/user-dashboard", verifyJWT, authorizeRoles("User"), userDashboard);
 
 router.get("/sphead-dashboard", verifyJWT, authorizeRoles("SPHead"), (req, res) => {
     res.json({ message: "Welcome to SPHead Dashboard" });
 });
+router.get("/user-dashboard/add-event",verifyJWT,authorizeRoles("User"),addEvent)
 
 router.get("/admin-dashboard", verifyJWT, authorizeRoles("Admin"), (req, res) => {
     res.json({ message: "Welcome to Admin Dashboard" });
@@ -39,4 +40,5 @@ router.get("/admin-dashboard", verifyJWT, authorizeRoles("Admin"), (req, res) =>
 router.get("/superadmin-dashboard", verifyJWT, authorizeRoles("SuperAdmin"), (req, res) => {
     res.json({ message: "Welcome to Super Admin Dashboard" });
 });
+
 export default router;

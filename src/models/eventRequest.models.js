@@ -2,15 +2,14 @@ import mongoose from "mongoose";
 
 const EventRequestSchema = new mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
+    user_id : {
+      type : String,
+      required : true
+    }
+    ,
     zone: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Zone",
-      required: true
     },
     eventType: {
       type: String,
@@ -35,6 +34,10 @@ const EventRequestSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "SPHead"
     },
+    description :{
+      type : String,
+      required : true
+    }
   }, {timestamps : true}
 );
 
