@@ -8,7 +8,8 @@ import jwt from "jsonwebtoken"
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
 import EventRequest from '../models/eventRequest.models.js';
-import { getNearestSPHead } from '../utils/findNearestSPHeaad.js';
+import { getMatchingSPHeads } from '../utils/getMatchingSPHeads.js';
+import { haversineDistance } from '../utils/haversineDistance.js';
 
 
 // Temporary storage for unverified users
@@ -144,10 +145,10 @@ const verifyEmail = asyncHandler(async (req, res) => {
         }
 
         res.cookie("accessToken", accessToken, options)
-           .cookie("refreshToken", refreshToken, options)
+            .cookie("refreshToken", refreshToken, options)
 
-          .redirect(`http://localhost:4001/api/v1/contact-details`);
-        
+            .redirect(`http://localhost:4001/api/v1/contact-details`);
+
     } catch (error) {
         console.error("Error in email verification:", error);
         throw new ApiError(500, "Internal Server Error");
@@ -159,7 +160,7 @@ const contactDetails = asyncHandler(async (req, res) => {
     res.render("contactDetails"); // Pass it to the template
 });
 
-const resetPasswordPage = asyncHandler(async(req,res) =>{
+const resetPasswordPage = asyncHandler(async (req, res) => {
     res.render('resetPassword')
 })
 
@@ -510,7 +511,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "Account details updated successfully"))
 });
 
-const getLoggedInUserDetails = asyncHandler(async (req,res) => {
+const getLoggedInUserDetails = asyncHandler(async (req, res) => {
     try {
         const userDetails = await User.aggregate([
             {
@@ -573,12 +574,36 @@ const getLoggedInUserDetails = asyncHandler(async (req,res) => {
     }
 });
 
-const userDashboard = asyncHandler(async(req,res) => {
+const userDashboard = asyncHandler(async (req, res) => {
     const user = req.user;
-    const events = undefined;
-    res.render('userDashboard',{user,events});
+    const userId = user._id.toString();
+    console.log("User Id Is : ",userId)
+    const events = await EventRequest.aggregate([
+        {
+            $match : {
+                user_id : userId
+            }
+        },
+        {
+            $project : {
+                user_id :1,
+                eventType : 1,
+                requested_date: {
+                    $dateToString: {
+                        format: "%Y-%m-%d",
+                        date: "$requested_date"
+                    }
+                },
+                requested_time : 1,
+                status : 1,
+                description : 1
+            }
+        }
+    ])
+
+    res.render('userDashboard', { user, events });
 })
-const addEvent = asyncHandler(async(req,res) => {
+const addEvent = asyncHandler(async (req, res) => {
     res.render('addEvent');
 });
 
@@ -586,14 +611,15 @@ const registerEvent = asyncHandler(async (req, res) => {
     const user = req.user;
 
     if (!user) {
-        throw new ApiError("User not found")
+        throw new ApiError(401, "User not found");
     }
 
-    const { eventType, requested_date, requested_time, description } = req.body;
-    console.log("Event"+ eventType,"\nRequested Date : "+ requested_date,"\nRequested Time : "+ requested_time)
+    const { eventType, requested_date, requested_time, description = "" } = req.body;
+    console.log("Event:", eventType, "\nRequested Date:", requested_date, "\nRequested Time:", requested_time);
+    console.log("User is:", user);
 
-    if ([eventType, requested_date, requested_time, description].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "All Fields are required")
+    if (!eventType || !requested_date || !requested_time) {
+        throw new ApiError(400, "Event type, date, and time are required");
     }
 
     const requestedEvent = await EventRequest.create({
@@ -602,27 +628,73 @@ const registerEvent = asyncHandler(async (req, res) => {
         requested_date,
         requested_time,
         description
-    })
-
-    if (!requestedEvent) {
-        throw new ApiError("Event registration failed. Please retry.")
-    }
-
-    const eventAssignedTo = await getNearestSPHead(user.lat, user.lon, user.state, user.district);
-
-    if (!eventAssignedTo) {
-        return new ApiResponse(200,{},"Event request is not available at your place")
-    }
-
-    console.log(eventAssignedTo);
-    return res.status(200)
-        .json({
-            success: true,
-            message: "User Registration completed, Data saved Succesfully",
-            redirectUrl: `/api/v1/user-dashboard`
     });
 
-})
+    if (!requestedEvent) {
+        throw new ApiError(500, "Event registration failed. Please retry.");
+    }
+
+    if (!user.lat || !user.lon || !user.state || !user.district) {
+        return res.status(400).json(new ApiResponse(400, {}, "User location details are missing"));
+    }
+
+    const { lat, lon, state, district } = req.user;
+
+    console.log("Received Location Data:", { lat, lon, state, district });
+
+    let nearestSPHead = null;
+    let minDistance = Infinity;
+
+    try {
+        console.log(`🔍 Searching for SPHeads in: ${district}, ${state}`);
+
+        const spHeads = await getMatchingSPHeads(state, district);
+
+        if (!spHeads || spHeads.length === 0) {
+            console.log("⚠️ No SPHeads found in this location");
+            return null;
+        }
+
+        console.log(`✅ Found ${spHeads.length} SPHeads, calculating distances...`);
+
+        for (const spHead of spHeads) {
+            const distance = haversineDistance(lat, lon, spHead.lat, spHead.lon);
+
+            console.log(`📏 Distance to SPHead (${spHead.name}): ${distance} km`);
+
+            if (distance === 0) nearestSPHead = spHead;
+
+            if (distance <= 15 && distance < minDistance) {
+                minDistance = distance;
+                nearestSPHead = spHead;
+            }
+        }
+
+        if (!nearestSPHead) {
+            console.log("❌ No SPHead found within 15 km range.");
+        } else {
+            console.log(`🎯 Nearest SPHead: ${nearestSPHead.name} (${minDistance.toFixed(2)} km away)`);
+        }
+    } catch (error) {
+        console.error("❌ Error in getNearestSPHead:", error);
+        throw new ApiError(500, "Something went wrong, please retry");
+    }
+
+    const eventAssignedTo = nearestSPHead;
+
+    if (!eventAssignedTo) {
+        return res.status(200).json(new ApiResponse(200, {}, "Event request is not available at your place"));
+    }
+
+    console.log("Event assigned to:", eventAssignedTo);
+
+    return res.status(200).json({
+        success: true,
+        message: `Event registration completed, Event is assigned to : ${eventAssignedTo.name}  `,
+        redirectUrl: `/api/v1/user-dashboard`
+    });
+});
+
 
 
 export {

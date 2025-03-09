@@ -160,10 +160,11 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        alert("Event registered successfully!");
+                        alert(data.message);
                         form.reset(); // Reset form after successful submission
+                        window.location.href = data.redirectUrl; // Manually redirect
                     } else {
-                        throw new Error(data.message || "Something went wrong");
+                        throw new Error("Something went wrong, Please retry.");
                     }
                 } catch (error) {
                     console.error("Error:", error.message);

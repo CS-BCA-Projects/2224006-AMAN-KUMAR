@@ -2,7 +2,8 @@ import User from "../models/user.models.js";
 import { asyncHandler } from "./asyncHandler.js";
 import { ApiError } from "./ApiError.js";
 
-const getMatchingSPHeads = asyncHandler(async function (userState, userDistrict) {
+const getMatchingSPHeads = async function (userState, userDistrict) {
+    console.log("Inside getMatchongSPHeads")
     try {
         const spHeads = await User.aggregate([
             {
@@ -35,6 +36,6 @@ const getMatchingSPHeads = asyncHandler(async function (userState, userDistrict)
     } catch (error) {
         throw new ApiError(500, "Something went wrong while fetching SPHeads.");
     }
-});
+};
 
 export { getMatchingSPHeads };
