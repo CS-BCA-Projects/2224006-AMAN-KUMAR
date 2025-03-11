@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent} from '../controllers/user.controllers.js';
+import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent, about, contactPage, spHeadDashboard} from '../controllers/user.controllers.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { authorizeRoles } from '../middlewares/authorizeRole.middleware.js';
 
@@ -27,10 +27,9 @@ router.route('/add-event').post(verifyJWT,registerEvent);
 
 // Protected Routes
 router.get("/user-dashboard", verifyJWT, authorizeRoles("User"), userDashboard);
-
-router.get("/sphead-dashboard", verifyJWT, authorizeRoles("SPHead"), (req, res) => {
-    res.json({ message: "Welcome to SPHead Dashboard" });
-});
+router.get("/about",about);
+router.get('/contact',contactPage)
+router.get("/spHead-dashboard", verifyJWT,authorizeRoles("SPHead"), spHeadDashboard);
 router.get("/user-dashboard/add-event",verifyJWT,authorizeRoles("User"),addEvent)
 
 router.get("/admin-dashboard", verifyJWT, authorizeRoles("Admin"), (req, res) => {

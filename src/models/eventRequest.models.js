@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const EventRequestSchema = new mongoose.Schema(
   {
-    user_id : {
-      type : String,
-      required : true
+    requestedBy: {
+      type: String,
+      required: true
     }
     ,
     zone: {
@@ -31,14 +31,13 @@ const EventRequestSchema = new mongoose.Schema(
       default: 'Pending'
     },
     assignedTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "SPHead"
+      type: String,
     },
-    description :{
-      type : String,
-      required : true
+    description: {
+      type: String,
+      required: true
     }
-  }, {timestamps : true}
+  }, { timestamps: true }
 );
 
 const EventRequest = mongoose.model("EventRequest", EventRequestSchema);

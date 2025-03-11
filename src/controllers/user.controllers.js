@@ -4,7 +4,7 @@ import User from "../models/user.models.js"
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { findLanLon } from '../utils/extractLatLon.js';
 import jwt from "jsonwebtoken"
-
+import mongoose from 'mongoose';
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
 import EventRequest from '../models/eventRequest.models.js';
@@ -262,7 +262,10 @@ const loginUser = asyncHandler(async (req, res) => {
                 .json({ success: true, redirectUrl: "/api/v1/user-dashboard" });
             break;
         case 'SPHead':
-            res.json({ success: true, redirectUrl: "/sphead-dashboard" });
+            res.status(200)
+                .cookie("accessToken", accessToken, options)
+                .cookie("refreshToken", refreshToken, options)
+                .json({ success: true, redirectUrl: "/api/v1/spHead-dashboard" });
             break;
         case 'Admin':
             res.json({ success: true, redirectUrl: "/admin-dashboard" });
@@ -512,6 +515,9 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const getLoggedInUserDetails = asyncHandler(async (req, res) => {
+    const user = req.user;
+    const userId = user._id.toString();
+    console.log("User Id Is : ", userId)
     try {
         const userDetails = await User.aggregate([
             {
@@ -521,7 +527,7 @@ const getLoggedInUserDetails = asyncHandler(async (req, res) => {
                 $lookup: {
                     from: "eventrequests",
                     localField: "_id",
-                    foreignField: "user",
+                    foreignField: "requestedBy",
                     as: "allEvents"
                 }
             },
@@ -576,33 +582,84 @@ const getLoggedInUserDetails = asyncHandler(async (req, res) => {
 
 const userDashboard = asyncHandler(async (req, res) => {
     const user = req.user;
-    const userId = user._id.toString();
-    console.log("User Id Is : ",userId)
-    const events = await EventRequest.aggregate([
-        {
-            $match : {
-                user_id : userId
-            }
-        },
-        {
-            $project : {
-                user_id :1,
-                eventType : 1,
-                requested_date: {
-                    $dateToString: {
-                        format: "%Y-%m-%d",
-                        date: "$requested_date"
-                    }
-                },
-                requested_time : 1,
-                status : 1,
-                description : 1
-            }
-        }
-    ])
+    const userId = user._id.toString(); // ✅ Convert ObjectId to String
 
-    res.render('userDashboard', { user, events });
-})
+    console.log("User Id Is:", userId);
+
+    try {
+        const userDetails = await User.aggregate([
+            {
+                $match: { _id: new mongoose.Types.ObjectId(userId) } // Ensure user exists
+            },
+            {
+                $lookup: {
+                    from: "eventrequests",
+                    let: { userIdStr: { $toString: "$_id" } }, // Convert ObjectId to string
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$requestedBy", "$$userIdStr"] } } }
+                    ],
+                    as: "allEvents"
+                }
+            },
+            {
+                $addFields: {
+                    recentEventRequest: {
+                        $filter: {
+                            input: "$allEvents",
+                            as: "event",
+                            cond: { $in: ["$$event.status", ["Pending", "Assigned"]] }
+                        }
+                    },
+                    completedEventRequest: {
+                        $filter: {
+                            input: "$allEvents",
+                            as: "event",
+                            cond: { $eq: ["$$event.status", "Completed"] }
+                        }
+                    },
+                    rejectedEventRequest: {
+                        $filter: {
+                            input: "$allEvents",
+                            as: "event",
+                            cond: { $eq: ["$$event.status", "Rejected"] }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    email: 1,
+                    phone: 1,
+                    state: 1,
+                    district: 1,
+                    address: 1,
+                    pinCode: 1,
+                    lat: 1,
+                    lon: 1,
+                    role: 1,
+                    status: 1,
+                    recentEventRequest: 1,
+                    completedEventRequest: 1,
+                    rejectedEventRequest: 1
+                }
+            }
+        ]);
+
+        console.log("User Details Are:", userDetails);
+        res.render("userDashboard", {
+            user: userDetails[0] || {},
+            recentEvents: userDetails[0]?.recentEventRequest || [],
+            completedEvents: userDetails[0]?.completedEventRequest || [],
+            rejectedEvents: userDetails[0]?.rejectedEventRequest || []
+        });
+    } catch (error) {
+        console.error("Error fetching user details:", error);
+        res.status(500).json({ error: "Failed to fetch user details." });
+    }
+});
+
 const addEvent = asyncHandler(async (req, res) => {
     res.render('addEvent');
 });
@@ -622,17 +679,6 @@ const registerEvent = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Event type, date, and time are required");
     }
 
-    const requestedEvent = await EventRequest.create({
-        user_id: user._id,
-        eventType,
-        requested_date,
-        requested_time,
-        description
-    });
-
-    if (!requestedEvent) {
-        throw new ApiError(500, "Event registration failed. Please retry.");
-    }
 
     if (!user.lat || !user.lon || !user.state || !user.district) {
         return res.status(400).json(new ApiResponse(400, {}, "User location details are missing"));
@@ -688,6 +734,21 @@ const registerEvent = asyncHandler(async (req, res) => {
 
     console.log("Event assigned to:", eventAssignedTo);
 
+    const requestedEvent = await EventRequest.create({
+        requestedBy: user._id,
+        eventType,
+        requested_date,
+        requested_time,
+        description,
+        assignedTo: eventAssignedTo._id,
+        status: "Assigned"
+    });
+
+    if (!requestedEvent) {
+        throw new ApiError(500, "Event registration failed. Please retry.");
+    }
+
+
     return res.status(200).json({
         success: true,
         message: `Event registration completed, Event is assigned to : ${eventAssignedTo.name}  `,
@@ -695,16 +756,145 @@ const registerEvent = asyncHandler(async (req, res) => {
     });
 });
 
+const about = asyncHandler(async (req, res) => {
+    res.render('aboutPage')
+});
 
+const contactPage = asyncHandler(async (req, res) => {
+    res.render('contactPage')
+});
+const spHeadDashboard = asyncHandler(async (req, res) => {
+    const spHeadId = req.user._id.toString(); // Convert to String to match assignedTo
 
+    console.log(spHeadId)
+    try {
+        // **Step 1: Fetch SPHead details**
+        const spHead = await User.findById(spHeadId).lean();
+        if (!spHead) {
+            return res.status(404).json({ error: "SPHead not found" });
+        }
+
+        // **Step 2: Fetch assigned events along with requester details**
+        const assignedEvents = await EventRequest.aggregate([
+            {
+                $match: { assignedTo: spHeadId } // Match assignedTo as a String
+            },
+            {
+                $addFields: {
+                    requestedBy: { $toObjectId: "$requestedBy" } // Convert requestedBy to ObjectId
+                }
+            },
+            {
+                $lookup: {
+                    from: "users", // Join with User collection
+                    localField: "requestedBy",
+                    foreignField: "_id",
+                    as: "requesterDetails"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$requesterDetails",
+                    preserveNullAndEmptyArrays: true
+                } // Convert array to object, but keep events without user data
+            },
+            {
+                $addFields: {
+                    "allEvents": {
+                        eventType: "$eventType",
+                        requested_date: "$requested_date",
+                        requested_time: "$requested_time",
+                        status: "$status",
+                        description: "$description",
+                        requester: {
+                            _id: "$requesterDetails._id",
+                            name: "$requesterDetails.name",
+                            email: "$requesterDetails.email",
+                            phone: "$requesterDetails.phone",
+                            state: "$requesterDetails.state",
+                            district: "$requesterDetails.district",
+                            address: "$requesterDetails.address",
+                            pinCode: "$requesterDetails.pinCode"
+                        }
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: spHeadId,
+                    allEvents: { $push: "$allEvents" }, // Store all event details in an array
+                    recentEventRequests: {
+                        $push: {
+                            $cond: {
+                                if: { $in: ["$status", ["Pending", "Assigned"]] },
+                                then: "$allEvents",
+                                else: "$$REMOVE"
+                            }
+                        }
+                    },
+                    completedEventRequests: {
+                        $push: {
+                            $cond: {
+                                if: { $eq: ["$status", "Completed"] },
+                                then: "$allEvents",
+                                else: "$$REMOVE"
+                            }
+                        }
+                    },
+                    rejectedEventRequests: {
+                        $push: {
+                            $cond: {
+                                if: { $eq: ["$status", "Rejected"] },
+                                then: "$allEvents",
+                                else: "$$REMOVE"
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    allEvents: 1,
+                    recentEventRequests: { $filter: { input: "$recentEventRequests", as: "event", cond: { $ne: ["$$event", {}] } } },
+                    completedEventRequests: { $filter: { input: "$completedEventRequests", as: "event", cond: { $ne: ["$$event", {}] } } },
+                    rejectedEventRequests: { $filter: { input: "$rejectedEventRequests", as: "event", cond: { $ne: ["$$event", {}] } } }
+                }
+            }
+        ]);
+
+        const result = assignedEvents[0] || {
+            allEvents: [],
+            recentEventRequests: [],
+            completedEventRequests: [],
+            rejectedEventRequests: []
+        };
+
+        console.log(assignedEvents[0])
+        res.render("spHeadDashboard", {
+            spHead, // SPHead details
+            allEvents: result.allEvents,
+            recentEventRequests: result.recentEventRequests,
+            completedEventRequests: result.completedEventRequests,
+            rejectedEventRequests: result.rejectedEventRequests
+        });
+
+    } catch (error) {
+        console.error("Error fetching SPHead dashboard details:", error);
+        res.status(500).json({ error: "Failed to fetch SPHead dashboard details." });
+    }
+});
 export {
     dashboard,
     login,
     signUp,
+    about,
+    contactPage,
     contactDetails,
     verifyEmailPage,
     resetPasswordPage,
     userDashboard,
+    spHeadDashboard,
     addEvent,
     registerUser,
     feedContact,

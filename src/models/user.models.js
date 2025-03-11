@@ -65,18 +65,10 @@ const UserSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId, 
             ref: "Zone" 
         },
-        recentEventRequest: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "EventRequest"
-            }
-        ],
-        pastEventRequest: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "EventRequest"
-            }
-        ],
+        allEvents : {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "EventRequest"
+        },
         isVerified: { 
             type: Boolean,
             default: false 
