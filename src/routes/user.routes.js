@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent, about, contactPage, spHeadDashboard} from '../controllers/user.controllers.js';
+import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent, about, contactPage, spHeadDashboard,updateEventStatus} from '../controllers/user.controllers.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { authorizeRoles } from '../middlewares/authorizeRole.middleware.js';
 
@@ -29,7 +29,10 @@ router.route('/add-event').post(verifyJWT,registerEvent);
 router.get("/user-dashboard", verifyJWT, authorizeRoles("User"), userDashboard);
 router.get("/about",about);
 router.get('/contact',contactPage)
+
 router.get("/spHead-dashboard", verifyJWT,authorizeRoles("SPHead"), spHeadDashboard);
+router.put("/update-status/:eventId", verifyJWT, updateEventStatus);
+
 router.get("/user-dashboard/add-event",verifyJWT,authorizeRoles("User"),addEvent)
 
 router.get("/admin-dashboard", verifyJWT, authorizeRoles("Admin"), (req, res) => {

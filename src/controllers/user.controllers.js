@@ -801,6 +801,7 @@ const spHeadDashboard = asyncHandler(async (req, res) => {
             {
                 $addFields: {
                     "allEvents": {
+                        eventId: "$_id",
                         eventType: "$eventType",
                         requested_date: "$requested_date",
                         requested_time: "$requested_time",
@@ -870,7 +871,7 @@ const spHeadDashboard = asyncHandler(async (req, res) => {
             rejectedEventRequests: []
         };
 
-        console.log(assignedEvents[0])
+        console.log("Assigned Events with eventId:", assignedEvents[0]); // ✅ Debugging Output
         res.render("spHeadDashboard", {
             spHead, // SPHead details
             allEvents: result.allEvents,
@@ -882,6 +883,35 @@ const spHeadDashboard = asyncHandler(async (req, res) => {
     } catch (error) {
         console.error("Error fetching SPHead dashboard details:", error);
         res.status(500).json({ error: "Failed to fetch SPHead dashboard details." });
+    }
+});
+
+const updateEventStatus = asyncHandler(async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { status } = req.body; // "Approved" or "Rejected"
+        console.log(eventId,status)
+
+        // Validate status
+        if (!["Approved", "Rejected", "Completed"].includes(status)) {
+            return res.status(400).json({ error: "Invalid status value" });
+        }
+
+        // Find event and update status
+        const updatedEvent = await EventRequest.findByIdAndUpdate(
+            eventId,
+            { status },
+            { new: true }
+        );
+
+        if (!updatedEvent) {
+            return res.status(404).json({ error: "Event not found" });
+        }
+
+        return res.json({ message: `Event status updated to ${status}`, updatedEvent });
+    } catch (error) {
+        console.error("Error updating event status:", error);
+        return res.status(500).json({ error: "Internal server error" });
     }
 });
 export {
@@ -908,5 +938,6 @@ export {
     updateAccountDetails,
     changeCurrentPassword,
     getLoggedInUserDetails,
-    registerEvent
+    registerEvent,
+    updateEventStatus
 };
