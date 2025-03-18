@@ -10,6 +10,8 @@ import sendEmail from '../utils/sendEmail.js';
 import EventRequest from '../models/eventRequest.models.js';
 import { getMatchingSPHeads } from '../utils/getMatchingSPHeads.js';
 import { haversineDistance } from '../utils/haversineDistance.js';
+import { sendNotification } from '../utils/sendNotification.js';
+import { updateExpiredEvents } from '../utils/updateExpiredEvents.js';
 
 
 // Temporary storage for unverified users
@@ -574,7 +576,7 @@ const userDashboard = asyncHandler(async (req, res) => {
     const userId = user._id.toString(); // ✅ Convert ObjectId to String
 
     console.log("User Id Is:", userId);
-
+    await updateExpiredEvents(userId); // Check & reject expired events
     try {
         const userDetails = await User.aggregate([
             {
@@ -737,7 +739,8 @@ const registerEvent = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Event registration failed. Please retry.");
     }
 
-
+    const notification = await sendNotification(user._id,`Event is successfully registered and has been assigned to ${eventAssignedTo.name}`);
+    console.log(notification);
     return res.status(200).json({
         success: true,
         message: `Event registration completed, Event is assigned to : ${eventAssignedTo.name}  `,
@@ -806,10 +809,11 @@ const about = asyncHandler(async (req, res) => {
 const contactPage = asyncHandler(async (req, res) => {
     res.render('contactPage')
 });
-const spHeadDashboard = asyncHandler(async (req, res) => {
+const spHeadDashboard = asyncHandler(async (req, res) => {  
     const spHeadId = req.user._id.toString(); // Convert to String to match assignedTo
 
     console.log(spHeadId)
+    await updateExpiredEvents(spHeadId);
     try {
         // **Step 1: Fetch SPHead details**
         const spHead = await User.findById(spHeadId).lean();
@@ -934,7 +938,6 @@ const updateEventStatus = asyncHandler(async (req, res) => {
         const { eventId } = req.params;
         const { status } = req.body; // "Approved" or "Rejected"
         console.log(eventId, status)
-
         // Validate status
         if (!["Approved", "Rejected", "Completed"].includes(status)) {
             return res.status(400).json({ error: "Invalid status value" });
@@ -950,7 +953,7 @@ const updateEventStatus = asyncHandler(async (req, res) => {
         if (!updatedEvent) {
             return res.status(404).json({ error: "Event not found" });
         }
-
+        console.log(updatedEvent)
         return res.json({ message: `Event status updated to ${status}`, updatedEvent });
     } catch (error) {
         console.error("Error updating event status:", error);
@@ -960,7 +963,9 @@ const updateEventStatus = asyncHandler(async (req, res) => {
 
 const helpSection = asyncHandler(async(req,res) => {
     res.render('help')
-})
+});
+
+
 
 export {
     dashboard,

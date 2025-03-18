@@ -14,7 +14,7 @@ const NotificationSchema = new mongoose.Schema(
     type: { 
       type: String, 
       enum: ["Email", "SMS", "In-App"], 
-      required: true 
+      default : "In-App",
     },
     sentAt: { 
       type: Date, 

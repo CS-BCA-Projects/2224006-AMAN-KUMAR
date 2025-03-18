@@ -287,7 +287,7 @@
 
                 <!-- 🔔 Notification Bell Icon -->
                 <li class="nav-item position-relative">
-                    <a class="nav-link" href="#" id="showNotifications">
+                    <a class="nav-link" href="/api/v1/notifications" id="showNotifications">
                         <i class="fas fa-bell position-relative"></i> <!-- Bell icon -->
                         <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute">3</span>
                     </a>
@@ -302,17 +302,6 @@
             </ul>
         </div>
     </nav>
-
-    <!-- 🔔 Notifications Popup -->
-    <div id="notificationsOverlay" class="overlay">
-        <div class="overlay-content">
-            <button class="close-btn" id="closeNotifications">&times;</button>
-            <h3>Notifications</h3>
-            <ul id="notificationList">
-                <li>No new notifications</li> <!-- This will be dynamically updated -->
-            </ul>
-        </div>
-    </div>
 
     <!-- 👤 User Profile Dropdown (Positioned below user icon) -->
     <div id="userProfileDropdown" class="profile-dropdown">
@@ -505,46 +494,6 @@
             // ✅ Close Overlay on Click
             closeOverlayBtn.addEventListener("click", function () {
                 userDetailsOverlay.style.display = "none"; // Hide overlay
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            // Get elements
-            const showNotificationsBtn = document.getElementById("showNotifications");
-            const closeNotificationsBtn = document.getElementById("closeNotifications");
-            const notificationsOverlay = document.getElementById("notificationsOverlay");
-            const notificationList = document.getElementById("notificationList");
-
-            // ✅ Simulated notifications (replace this with API call)
-            let notifications = [
-                "New event assigned to you!",
-                "Event status updated.",
-                "Reminder: Upcoming event tomorrow."
-            ];
-
-            // ✅ Update notifications dynamically
-            function loadNotifications() {
-                notificationList.innerHTML = ""; // Clear existing list
-                if (notifications.length === 0) {
-                    notificationList.innerHTML = "<li>No new notifications</li>";
-                } else {
-                    notifications.forEach(notification => {
-                        let li = document.createElement("li");
-                        li.textContent = notification;
-                        notificationList.appendChild(li);
-                    });
-                }
-            }
-
-            // ✅ Show notifications popup
-            showNotificationsBtn.addEventListener("click", function () {
-                loadNotifications();
-                notificationsOverlay.style.display = "flex";
-            });
-
-            // ✅ Close notifications popup
-            closeNotificationsBtn.addEventListener("click", function () {
-                notificationsOverlay.style.display = "none";
             });
         });
 

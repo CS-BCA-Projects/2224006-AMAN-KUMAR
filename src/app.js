@@ -46,11 +46,6 @@ app.use(express.static(path.join(process.cwd(), "frontend", "public")));
 //router import
 import Router from './routes/user.routes.js'
 
-
-//routes
-app.get("/", (req, res) => {
-    res.send("Hello, Vercel! 🚀 Your Express app is working.");
-});
   
 app.use("/api/v1",Router);
 
