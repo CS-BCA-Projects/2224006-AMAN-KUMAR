@@ -48,7 +48,10 @@ import Router from './routes/user.routes.js'
 
 
 //routes
-
+app.get("/", (req, res) => {
+    res.send("Hello, Vercel! 🚀 Your Express app is working.");
+});
+  
 app.use("/api/v1",Router);
 
 // Use the global error handler (must be after routes)
