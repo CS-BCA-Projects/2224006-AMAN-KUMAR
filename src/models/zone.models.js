@@ -2,11 +2,6 @@ import mongoose, {Schema} from "mongoose";
 
 const ZoneSchema = new mongoose.Schema(
   {
-    name: { 
-      type: String, 
-      required: true, 
-      unique: true 
-    },
     region: { 
       type: String, 
       required: true 

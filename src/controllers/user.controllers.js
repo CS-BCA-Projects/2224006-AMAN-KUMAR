@@ -276,22 +276,6 @@ const loginUser = asyncHandler(async (req, res) => {
         default:
             res.status(403).json({ success: false, message: "Unauthorized access" });
     }
-
-
-    // return res.status(200)
-    //     .cookie("accessToken", accessToken, options)
-    //     .cookie("refreshToken", refreshToken, options)
-    //     .json({
-    //         status: "success",
-    //         message: "Login successful",
-    //         user: {
-    //             id: user._id,
-    //             email: user.email,
-    //             role: user.role
-    //         },
-    //         accessToken,
-    //         refreshToken
-    //     });
 })
 
 const logoutUser = asyncHandler(async (req, res) => {
@@ -365,12 +349,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
 })
-
+const changePasswordPage = asyncHandler(async(req,res) => {
+    res.render('changeCurrentPassword')
+})
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
+    console.log(oldPassword,newPassword)
     const user = await User.findById(req.user?._id);
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
+    console.log(isPasswordCorrect)
+    
     if (!isPasswordCorrect) {
         throw new ApiError(404, "Password Incorrect");
     }
@@ -647,7 +636,7 @@ const userDashboard = asyncHandler(async (req, res) => {
             }
         ]);
 
-        console.log("User Details Are:", userDetails);
+        console.log("User Details Are:", userDetails[0].recentEventRequest);
         res.render("userDashboard", {
             user: userDetails[0] || {},
             recentEvents: userDetails[0]?.recentEventRequest || [],
@@ -755,6 +744,60 @@ const registerEvent = asyncHandler(async (req, res) => {
         redirectUrl: `/api/v1/user-dashboard`
     });
 });
+
+const renderUpdatePage = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+
+        const event = await EventRequest.findById(eventId);
+        console.log(event)
+        if (!event) {
+            return res.status(404).send("Event not found");
+        }
+
+        res.render("updateEvent", { event }); // Pass event data to EJS
+    } catch (error) {
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+const updateEventDetails = asyncHandler(async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { eventType, requested_date, requested_time, description = "" } = req.body;
+
+        const updatedEvent = await EventRequest.findByIdAndUpdate(
+            eventId,
+            { eventType, requested_date, requested_time, description },
+            { new: true } // Return updated document
+        );
+
+        if (!updatedEvent) {
+            return res.status(404).json({ success: false, message: "Event not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Event updated successfully", updatedEvent });
+    } catch (error) {
+        console.error("Update error:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+});
+
+const cancelEventRequest = asyncHandler(async (req, res) => {
+    try {
+        const { eventId } = req.params;
+
+        const deletedEvent = await EventRequest.findByIdAndDelete(eventId);
+
+        if (!deletedEvent) {
+            return res.status(404).json({ success: false, message: "Event not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Event canceled successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+})
 
 const about = asyncHandler(async (req, res) => {
     res.render('aboutPage')
@@ -890,7 +933,7 @@ const updateEventStatus = asyncHandler(async (req, res) => {
     try {
         const { eventId } = req.params;
         const { status } = req.body; // "Approved" or "Rejected"
-        console.log(eventId,status)
+        console.log(eventId, status)
 
         // Validate status
         if (!["Approved", "Rejected", "Completed"].includes(status)) {
@@ -914,6 +957,11 @@ const updateEventStatus = asyncHandler(async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 });
+
+const helpSection = asyncHandler(async(req,res) => {
+    res.render('help')
+})
+
 export {
     dashboard,
     login,
@@ -939,5 +987,10 @@ export {
     changeCurrentPassword,
     getLoggedInUserDetails,
     registerEvent,
-    updateEventStatus
+    renderUpdatePage,
+    updateEventDetails,
+    cancelEventRequest,
+    updateEventStatus,
+    helpSection,
+    changePasswordPage
 };

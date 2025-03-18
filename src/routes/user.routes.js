@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent, about, contactPage, spHeadDashboard,updateEventStatus} from '../controllers/user.controllers.js';
+import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent, about, contactPage, spHeadDashboard,updateEventStatus, updateEventDetails, renderUpdatePage, cancelEventRequest, helpSection, changeCurrentPassword, changePasswordPage} from '../controllers/user.controllers.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { authorizeRoles } from '../middlewares/authorizeRole.middleware.js';
 
@@ -7,6 +7,7 @@ const router = Router();
 
 // Correct way to define routes
 router.get("/dashboard",dashboard)
+router.get("/help",helpSection)
 router.get("/login",login)
 router.get("/sign-up",signUp)
 router.get("/verifyEmailForSignup",verifyEmailPage)
@@ -19,10 +20,18 @@ router.route("/login").post(loginUser)
 router.route("/login/forgot-password").post(forgotPassword)
 router.get("/login/reset-password",resetPassword)
 
+router.get('/changePassword',verifyJWT,changePasswordPage)
+router.route("/change-password").put(verifyJWT,changeCurrentPassword)
+
 //secured routes
 router.route("/logout").post(verifyJWT, logoutUser)
 router.route("/refresh-token",refreshAccessToken)
 router.route('/add-event').post(verifyJWT,registerEvent);
+
+// ✅ Route to get event details for update page
+router.get("/update-event/:eventId", verifyJWT,renderUpdatePage);
+router.put("/update/:eventId",verifyJWT, updateEventDetails);
+router.delete("/cancel/:eventId",verifyJWT,cancelEventRequest)
 
 
 // Protected Routes

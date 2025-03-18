@@ -25,6 +25,10 @@
             background-color: #0000ff;
         }
 
+        .logo-img {
+            border-radius: 50%;
+        }
+
         .navbar-brand img {
             width: 40px;
             height: 40px;
@@ -67,18 +71,210 @@
             border-bottom: 2px solid rgb(35, 1, 255);
             padding-bottom: 5px;
             width: fit-content;
+            font-size: 15px;
+        }
+
+        .new-event {
+            border: 1px solid rgb(35, 1, 255);
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: white;
+            font-size: 15px;
+        }
+
+        .new-event:hover {
+            background-color: rgb(35, 1, 255);
+            color: white;
+            transition: ease-in;
+        }
+
+        .cust-table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: separate;
+            /* Enables spacing */
+            border-spacing: 0 20px;
+            /* Adds 10px gap between rows */
+        }
+
+        thead {
+            background-color: rgb(35, 1, 255);
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        th {
+            padding: 10px 10px;
+            border-left: 1px solid white;
+            text-align: center;
+        }
+
+        /* Apply border-radius to first and last header cells */
+        table thead tr th:first-child,
+        #eventTableBody tr td:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        table thead tr th:last-child,
+        #eventTableBody tr td:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .corner {
+            border-radius: 10px;
+        }
+
+        .right-corner {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .left-corner {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        #eventTableBody tr td {
+            border: 1px solid rgb(35, 1, 255);
+            padding: 10px 20px;
+        }
+
+        td {
+            vertical-align: middle;
+            /* Aligns content vertically */
+        }
+
+        td .btn-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Centers buttons */
+            height: 100%;
+            /* Makes container take full td height */
+        }
+
+        /* Overlay styling for popups */
+        .overlay {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Popup content styling */
+        .overlay-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        /* Close button styling */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 28px;
+            border: none;
+            background: none;
+            color: black;
+            cursor: pointer;
+        }
+
+        /* Ensure the badge aligns properly on top-right of the bell */
+        #notificationBadge {
+            position: absolute;
+            top: 5px;
+            /* Moves badge higher */
+            right: -2px;
+            /* Moves badge slightly to the right */
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+            border-radius: 50%;
+        }
+
+        /* Style for user profile dropdown */
+        .profile-dropdown {
+            display: none;
+            /* Hidden by default */
+            position: absolute;
+            top: 50px;
+            /* Adjust distance below user icon */
+            right: 10px;
+            /* Align with the user icon */
+            background-color: #d9d9d9;
+            /* Light gray background */
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            min-width: 180px;
+            z-index: 1000;
+            border: 2px solid #007bff;
+            /* Blue border */
+        }
+
+        /* Style for username */
+        .profile-dropdown p {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+        }
+
+        /* Blue underline */
+        .profile-dropdown hr {
+            border: 1px solid blue;
+            margin: 5px 0;
+        }
+
+        /* Logout button */
+        .logout-btn {
+            width: 100%;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
+        /* Logout icon */
+        .logout-btn i {
+            margin-left: 5px;
         }
     </style>
 </head>
 
 <body>
-
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark px-3">
-        <a class="navbar-brand" href="#">
-            <img src="/images/logo.jpg" alt="Logo">
-            AWGP Seva Portal
-        </a>
+        <div class="d-flex align-items-center">
+            <img src="/images/logo.jpg" alt="AWGP Logo" width="50" height="50" class="logo-img">
+            <h4 class="ms-2 fs-6 fw-light text-white">AWGP Seva Portal</h4>
+        </div>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -87,21 +283,68 @@
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/user-dashboard">Home</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/about">About</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/contact">Contact</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="#">Help</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-bell"></i></a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-user-circle"></i></a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/api/v1/help">Help</a></li>
+
+                <!-- 🔔 Notification Bell Icon -->
+                <li class="nav-item position-relative">
+                    <a class="nav-link" href="#" id="showNotifications">
+                        <i class="fas fa-bell position-relative"></i> <!-- Bell icon -->
+                        <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute">3</span>
+                    </a>
+                </li>
+
+                <!-- 👤 User Profile Icon -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#" id="showUserProfile">
+                        <i class="fas fa-user-circle"></i>
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>
 
+    <!-- 🔔 Notifications Popup -->
+    <div id="notificationsOverlay" class="overlay">
+        <div class="overlay-content">
+            <button class="close-btn" id="closeNotifications">&times;</button>
+            <h3>Notifications</h3>
+            <ul id="notificationList">
+                <li>No new notifications</li> <!-- This will be dynamically updated -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- 👤 User Profile Dropdown (Positioned below user icon) -->
+    <div id="userProfileDropdown" class="profile-dropdown">
+        <p id="profileUserName"></p>
+        <hr> <!-- Blue underline -->
+        <button class="logout-btn" onclick="logout()">Log Out <i class="fas fa-sign-out-alt"></i></button>
+        <hr> <!-- Blue underline -->
+        <button class="logout-btn" onclick="window.location.href='/api/v1/changePassword'">Change Password</button>
+    </div>
+
+
     <!-- Buttons -->
     <div class="container mt-3">
         <div class="d-flex justify-content-between align-items-center">
-            <button class="btn btn-outline-danger">
+            <button class="btn btn-outline-danger" id="showUserDetails">
                 <i class="fas fa-map-marker-alt"></i> Location
             </button>
+            <!-- User Details Overlay -->
+            <div id="userDetailsOverlay" class="overlay">
+                <div class="overlay-content">
+                    <button class="close-btn" id="closeOverlay">&times;</button>
+                    <h3>User Contact Details</h3>
+                    <p><strong>Name:</strong> <span id="overlayUserName"></span></p>
+                    <p><strong>Address:</strong> <span id="overlayUserAddress"></span></p>
+                    <p><strong>State:</strong> <span id="overlayUserState"></span></p>
+                    <p><strong>Pin Code:</strong> <span id="overlayUserPin"></span></p>
+                    <p><strong>Phone:</strong> <span id="overlayUserPhone"></span></p>
+                </div>
+            </div>
+
             <a href="/api/v1/user-dashboard/add-event">
-                <button class="btn btn-primary">+ New Event</button>
+                <button class="new-event">+ New Event</button>
             </a>
         </div>
 
@@ -116,13 +359,13 @@
 
         <!-- Table for Desktop View -->
         <div class="d-none d-md-block">
-            <table class="table table-bordered mt-3">
-                <thead style="background-color: blue; color: white;">
+            <table class="cust-table">
+                <thead>
                     <tr>
                         <th>Event Details</th>
                         <th>Date / Time</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th id="actionColumn">Action</th>
                     </tr>
                 </thead>
                 <tbody id="eventTableBody">
@@ -147,6 +390,7 @@
             const recentEvents = JSON.parse('<%- JSON.stringify(recentEvents) %>');
             const completedEvents = JSON.parse('<%- JSON.stringify(completedEvents) %>');
             const rejectedEvents = JSON.parse('<%- JSON.stringify(rejectedEvents) %>');
+
             function updateEventTable(selectedType) {
                 eventTableBody.innerHTML = ""; // Clear previous content
 
@@ -154,20 +398,23 @@
                 if (selectedType === "recent") {
                     selectedEvents = recentEvents;
                     eventTitle.textContent = "Your Recent Events";
+                    document.querySelector("th#actionColumn").style.display = ""; // Show Action Column
                 } else if (selectedType === "completed") {
                     selectedEvents = completedEvents;
                     eventTitle.textContent = "Your Completed Events";
+                    document.querySelector("th#actionColumn").style.display = "none"; // Hide Action Column
                 } else {
                     selectedEvents = rejectedEvents;
                     eventTitle.textContent = "Your Rejected Events";
+                    document.querySelector("th#actionColumn").style.display = "none"; // Hide Action Column
                 }
 
                 if (selectedEvents.length === 0) {
                     eventTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="4" class="text-center"><strong>No ${eventTitle.textContent} yet.</strong></td>
-                        </tr>
-                    `;
+                    <tr>
+                        <td colspan="4" class="text-center corner"><strong>No ${eventTitle.textContent} yet.</strong></td>
+                    </tr>
+                `;
                     return;
                 }
 
@@ -188,12 +435,11 @@
                             <td>
                                 <span class="event-status ${event.status.toLowerCase()}">${event.status}</span>
                             </td>
-                            <td class = "d-flex flex-row mb-3 justify-content-center align-items-center ">
-
-                                <button class="btn btn-success">Update</button>
-                                <button class="btn btn-danger">Cancel</button>
-
-                            </td>
+                            ${selectedType === "recent" ? `
+                            <td class="btn-container">
+                                <button class="btn btn-success edit-btn" data-id="${event._id}">Update</button>
+                                <button class="btn btn-danger cancel-btn" data-id="${event._id}">Cancel</button>
+                            </td>` : ""}
                         </tr>
                     `;
                 });
@@ -207,6 +453,144 @@
                 updateEventTable(eventDropdown.value);
             });
         });
+
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("edit-btn")) {
+                const eventId = event.target.dataset.id;
+                window.location.href = `/api/v1/update-event/${eventId}`; // Redirect to update page
+            }
+        });
+
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("cancel-btn")) {
+                const eventId = event.target.dataset.id;
+
+                if (confirm("Are you sure you want to cancel this event?")) {
+                    fetch(`/api/v1/cancel/${eventId}`, { method: "DELETE" })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Event canceled successfully!");
+                                location.reload(); // Refresh the page
+                            } else {
+                                alert("Failed to cancel event.");
+                            }
+                        })
+                        .catch(error => console.error("Error:", error));
+                }
+            }
+        });
+
+
+        // Show User Details on Click
+        document.addEventListener("DOMContentLoaded", function () {
+            const showDetailsBtn = document.getElementById("showUserDetails");
+            const closeOverlayBtn = document.getElementById("closeOverlay");
+            const userDetailsOverlay = document.getElementById("userDetailsOverlay");
+
+            // ✅ Use the user data from EJS
+            const user = JSON.parse('<%- JSON.stringify(user) %>');
+
+            // ✅ Show User Details **Only When Button is Clicked**
+            showDetailsBtn.addEventListener("click", function () {
+                document.getElementById("overlayUserName").textContent = user.name || "Not Provided";
+                document.getElementById("overlayUserAddress").textContent = user.address || "Not Provided";
+                document.getElementById("overlayUserState").textContent = user.state || "N/A";
+                document.getElementById("overlayUserPin").textContent = user.pinCode || "N/A";
+                document.getElementById("overlayUserPhone").textContent = user.phone || "N/A";
+
+                userDetailsOverlay.style.display = "flex"; // Show overlay only when clicked
+            });
+
+            // ✅ Close Overlay on Click
+            closeOverlayBtn.addEventListener("click", function () {
+                userDetailsOverlay.style.display = "none"; // Hide overlay
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Get elements
+            const showNotificationsBtn = document.getElementById("showNotifications");
+            const closeNotificationsBtn = document.getElementById("closeNotifications");
+            const notificationsOverlay = document.getElementById("notificationsOverlay");
+            const notificationList = document.getElementById("notificationList");
+
+            // ✅ Simulated notifications (replace this with API call)
+            let notifications = [
+                "New event assigned to you!",
+                "Event status updated.",
+                "Reminder: Upcoming event tomorrow."
+            ];
+
+            // ✅ Update notifications dynamically
+            function loadNotifications() {
+                notificationList.innerHTML = ""; // Clear existing list
+                if (notifications.length === 0) {
+                    notificationList.innerHTML = "<li>No new notifications</li>";
+                } else {
+                    notifications.forEach(notification => {
+                        let li = document.createElement("li");
+                        li.textContent = notification;
+                        notificationList.appendChild(li);
+                    });
+                }
+            }
+
+            // ✅ Show notifications popup
+            showNotificationsBtn.addEventListener("click", function () {
+                loadNotifications();
+                notificationsOverlay.style.display = "flex";
+            });
+
+            // ✅ Close notifications popup
+            closeNotificationsBtn.addEventListener("click", function () {
+                notificationsOverlay.style.display = "none";
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const userProfileBtn = document.getElementById("showUserProfile");
+            const userProfileDropdown = document.getElementById("userProfileDropdown");
+            const profileUserName = document.getElementById("profileUserName");
+
+            const user = JSON.parse('<%- JSON.stringify(user) %>');
+
+            // Show or hide dropdown on click
+            userProfileBtn.addEventListener("click", function (event) {
+                userProfileDropdown.style.display =
+                    userProfileDropdown.style.display === "block" ? "none" : "block";
+                event.stopPropagation(); // Prevent closing immediately
+                profileUserName.innerHTML = user.name;
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener("click", function (event) {
+                if (!userProfileBtn.contains(event.target) && !userProfileDropdown.contains(event.target)) {
+                    userProfileDropdown.style.display = "none";
+                }
+            });
+        });
+
+        // Logout function
+        function logout() {
+            fetch("/api/v1/logout", { method: "POST" })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Logged out successfully!");
+                        window.location.href = "/api/v1/login";
+                    } else {
+                        alert("Logout failed. Try again.");
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        }
+        function changePassword(){
+            
+        }
+
+
+
     </script>
 
 

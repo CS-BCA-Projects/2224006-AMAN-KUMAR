@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help & Support - AWGP Seva Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a96a0fdf1a.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Roboto", sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            background-color: #0000ff;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            top: 56px;
+            left: 0;
+            height: calc(100vh - 56px);
+            background: #0044cc;
+            color: white;
+            padding-top: 20px;
+            overflow-y: auto;
+        }
+        .sidebar a {
+            display: block;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .sidebar a:hover {
+            background: #002080;
+        }
+        .content {
+            margin-left: 260px;
+            padding: 80px 20px 20px 20px;
+            flex: 1;
+            min-height: calc(100vh - 56px);
+        }
+        .faq-card {
+            border-left: 5px solid #0044cc;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+        .footer {
+            background: #002080;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+        .section {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark navbar-expand-lg px-3">
+        <a class="navbar-brand text-white" href="#">AWGP Seva Portal - Help</a>
+    </nav>
+    
+    <div class="sidebar">
+        <a onclick="showSection('faq')">FAQs</a>
+        <a onclick="showSection('user-guide')">User Guide</a>
+        <a onclick="showSection('contact')">Contact Support</a>
+    </div>
+
+    <div class="content">
+        <div id="faq" class="section active">
+            <h2>Frequently Asked Questions (FAQs)</h2>
+            <div class="faq-card">
+                <h5>How do I request an event?</h5>
+                <p>Login and click on "New Event" to fill out the request form.</p>
+            </div>
+            <div class="faq-card">
+                <h5>How can I check my event status?</h5>
+                <p>Go to "Your Recent Events" on the dashboard.</p>
+            </div>
+        </div>
+        
+        <div id="user-guide" class="section">
+            <h2>User Guide</h2>
+            <p>Learn how to navigate and use the platform as a regular user.</p>
+        </div>
+        
+        <div id="contact" class="section">
+            <h2>Contact Support</h2>
+            <p>For further assistance, email us at <strong>support@awgpseva.com</strong>.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 AWGP Seva Portal. All rights reserved.</p>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import path from "path";
 import { fileURLToPath } from "url";
+import { errorHandler } from './middlewares/errorHandler.middleware.js';
 
 const app = express();
 
@@ -52,5 +53,6 @@ import Router from './routes/user.routes.js'
 
 app.use("/api/v1",Router);
 
-
+// Use the global error handler (must be after routes)
+app.use(errorHandler);
 export {app}
