@@ -40,10 +40,8 @@ app.use(cors());
 
 // Set EJS as the template engine
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "../frontend/views")); // Use frontend views
-
-// Serve static files from frontend/public
-app.use(express.static(path.join(__dirname, "../frontend/public")));
+app.set("views", path.join(process.cwd(), "frontend", "views"));
+app.use(express.static(path.join(process.cwd(), "frontend", "public")));
 
 //router import
 import Router from './routes/user.routes.js'
