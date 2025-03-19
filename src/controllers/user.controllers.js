@@ -273,7 +273,10 @@ const loginUser = asyncHandler(async (req, res) => {
             res.json({ success: true, redirectUrl: "/admin-dashboard" });
             break;
         case 'SuperAdmin':
-            res.json({ success: true, redirectUrl: "/superadmin-dashboard" });
+            res.status(200)
+                .cookie("accessToken", accessToken, options)
+                .cookie("refreshToken", refreshToken, options)
+                .json({ success: true, redirectUrl: "/api/v1/superadmin/dashboard" });
             break;
         default:
             res.status(403).json({ success: false, message: "Unauthorized access" });
@@ -351,17 +354,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
 })
-const changePasswordPage = asyncHandler(async(req,res) => {
+const changePasswordPage = asyncHandler(async (req, res) => {
     res.render('changeCurrentPassword')
 })
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
-    console.log(oldPassword,newPassword)
+    console.log(oldPassword, newPassword)
     const user = await User.findById(req.user?._id);
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
     console.log(isPasswordCorrect)
-    
+
     if (!isPasswordCorrect) {
         throw new ApiError(404, "Password Incorrect");
     }
@@ -598,7 +601,7 @@ const userDashboard = asyncHandler(async (req, res) => {
                         $filter: {
                             input: "$allEvents",
                             as: "event",
-                            cond: { $in: ["$$event.status", ["Pending", "Assigned"]] }
+                            cond: { $in: ["$$event.status", ["Pending", "Assigned","Approved"]] }
                         }
                     },
                     completedEventRequest: {
@@ -739,8 +742,8 @@ const registerEvent = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Event registration failed. Please retry.");
     }
 
-    const notification = await sendNotification(user._id,`Event is successfully registered and has been assigned to ${eventAssignedTo.name}`);
-    console.log(notification);
+    await sendNotification(user._id, `Event is successfully registered and has been assigned to ${eventAssignedTo.name}`);
+    await sendNotification(eventAssignedTo._id, `A new event has been requested for ${eventType} for Date : ${requested_date}`)
     return res.status(200).json({
         success: true,
         message: `Event registration completed, Event is assigned to : ${eventAssignedTo.name}  `,
@@ -778,7 +781,8 @@ const updateEventDetails = asyncHandler(async (req, res) => {
         if (!updatedEvent) {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
-
+        await sendNotification(updatedEvent.requestedBy, `Event is successfully updated`);
+        await sendNotification(updatedEvent.assignedTo, `A event has been updated for ${updatedEvent.eventType} for Date : ${updatedEvent.requested_date}`)
         res.status(200).json({ success: true, message: "Event updated successfully", updatedEvent });
     } catch (error) {
         console.error("Update error:", error);
@@ -795,7 +799,8 @@ const cancelEventRequest = asyncHandler(async (req, res) => {
         if (!deletedEvent) {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
-
+        await sendNotification(deletedEvent.requestedBy, `Event is successfully cancelled`);
+        await sendNotification(deletedEvent.assignedTo, `An event has been cancelled for ${deletedEvent.eventType} for Date : ${deletedEvent.requested_date}`)
         res.status(200).json({ success: true, message: "Event canceled successfully" });
     } catch (error) {
         res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -809,7 +814,7 @@ const about = asyncHandler(async (req, res) => {
 const contactPage = asyncHandler(async (req, res) => {
     res.render('contactPage')
 });
-const spHeadDashboard = asyncHandler(async (req, res) => {  
+const spHeadDashboard = asyncHandler(async (req, res) => {
     const spHeadId = req.user._id.toString(); // Convert to String to match assignedTo
 
     console.log(spHeadId)
@@ -874,7 +879,7 @@ const spHeadDashboard = asyncHandler(async (req, res) => {
                     recentEventRequests: {
                         $push: {
                             $cond: {
-                                if: { $in: ["$status", ["Pending", "Assigned"]] },
+                                if: { $in: ["$status", ["Pending", "Assigned","Approved"]] },
                                 then: "$allEvents",
                                 else: "$$REMOVE"
                             }
@@ -954,6 +959,8 @@ const updateEventStatus = asyncHandler(async (req, res) => {
             return res.status(404).json({ error: "Event not found" });
         }
         console.log(updatedEvent)
+        await sendNotification(updatedEvent.requestedBy, `Event is  ${status} by the assigned spHead`);
+        await sendNotification(updatedEvent.assignedTo, `Event is  ${status} by you for the requested ${updatedEvent.eventType} event.`)
         return res.json({ message: `Event status updated to ${status}`, updatedEvent });
     } catch (error) {
         console.error("Error updating event status:", error);
@@ -961,7 +968,7 @@ const updateEventStatus = asyncHandler(async (req, res) => {
     }
 });
 
-const helpSection = asyncHandler(async(req,res) => {
+const helpSection = asyncHandler(async (req, res) => {
     res.render('help')
 });
 

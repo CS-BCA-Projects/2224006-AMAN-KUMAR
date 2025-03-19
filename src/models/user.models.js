@@ -28,8 +28,7 @@ const UserSchema = new mongoose.Schema(
             type: String, 
         },
         phone: { 
-            type: String,  
-            unique: true 
+            type: String
         },
         state : {
             type : String,

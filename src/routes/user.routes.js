@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent, about, contactPage, spHeadDashboard,updateEventStatus, updateEventDetails, renderUpdatePage, cancelEventRequest, helpSection, changeCurrentPassword, changePasswordPage} from '../controllers/user.controllers.js';
-import { deleteNotification, getUserNotifications } from '../controllers/notification.controllers.js';
+import { deleteNotification, getUserNotifications, notificationCount } from '../controllers/notification.controllers.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { authorizeRoles } from '../middlewares/authorizeRole.middleware.js';
 
@@ -41,6 +41,7 @@ router.get("/about",about);
 router.get('/contact',contactPage)
 router.route('/notifications').get(verifyJWT,getUserNotifications)
 router.route('/notifications/:id').delete(verifyJWT,deleteNotification)
+router.route('/notifications/count').get(verifyJWT,notificationCount)
 
 router.get("/spHead-dashboard", verifyJWT,authorizeRoles("SPHead"), spHeadDashboard);
 router.put("/update-status/:eventId", verifyJWT, updateEventStatus);

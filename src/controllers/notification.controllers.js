@@ -27,7 +27,15 @@ const deleteNotification = asyncHandler(async (req, res) => {
     }
 });
 
+const notificationCount = asyncHandler(async (req,res) => {
+    const userId = req.user._id; // Get logged-in user's ID
+    const unreadCount = await Notification.countDocuments({user : userId});
+
+    res.status(200).json({ count: unreadCount });
+})
+
 export {
     getUserNotifications,
-    deleteNotification
+    deleteNotification,
+    notificationCount
 }

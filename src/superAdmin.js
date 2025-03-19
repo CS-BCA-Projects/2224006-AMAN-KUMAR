@@ -15,6 +15,8 @@ const createSuperAdmin = async () => {
 
         const existingSuperAdmin = await User.findOne({ role: "SuperAdmin" });
 
+        console.log("Email Id :",process.env.SUPERADMIN_EMAIL)
+        console.log("Password is :",process.env.SUPERADMIN_PASSWORD)
         if (!existingSuperAdmin) {
             const hashedPassword = await bcrypt.hash(process.env.SUPERADMIN_PASSWORD, 10);
 
@@ -22,6 +24,7 @@ const createSuperAdmin = async () => {
                 email: process.env.SUPERADMIN_EMAIL,
                 password: hashedPassword,
                 role: "SuperAdmin",
+                phone : "8877356175",
                 isVerified: true
             });
 

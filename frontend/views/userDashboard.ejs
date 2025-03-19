@@ -289,7 +289,7 @@
                 <li class="nav-item position-relative">
                     <a class="nav-link" href="/api/v1/notifications" id="showNotifications">
                         <i class="fas fa-bell position-relative"></i> <!-- Bell icon -->
-                        <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute">3</span>
+                        <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute" style="display: none;"></span>
                     </a>
                 </li>
 
@@ -370,6 +370,7 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            updateNotificationBadge();
             const eventDropdown = document.getElementById("eventDropdown");
             const eventTitle = document.getElementById("eventTitle");
             const eventTableBody = document.getElementById("eventTableBody");
@@ -534,11 +535,25 @@
                 })
                 .catch(error => console.error("Error:", error));
         }
-        function changePassword(){
-            
+        function changePassword() {
+
         }
 
+        function updateNotificationBadge() {
+            fetch("/api/v1/notifications/count")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationBadge = document.getElementById("notificationBadge");
 
+                    if (data.count > 0) {
+                        notificationBadge.textContent = data.count;
+                        notificationBadge.style.display = "flex"; // Show badge
+                    } else {
+                        notificationBadge.style.display = "none"; // Hide badge if no notifications
+                    }
+                })
+                .catch(error => console.error("Error fetching notifications:", error));
+        }
 
     </script>
 

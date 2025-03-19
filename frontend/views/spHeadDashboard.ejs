@@ -94,6 +94,170 @@
             padding: 5px 10px;
             border-radius: 5px;
         }
+        .cust-table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: separate;
+            /* Enables spacing */
+            border-spacing: 0 20px;
+            /* Adds 10px gap between rows */
+        }
+
+        thead {
+            background-color: rgb(35, 1, 255);
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        th {
+            padding: 10px 10px;
+            border-left: 1px solid white;
+            text-align: center;
+        }
+
+        /* Apply border-radius to first and last header cells */
+        table thead tr th:first-child,
+        #eventTableBody tr td:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        table thead tr th:last-child,
+        #eventTableBody tr td:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        #eventTableBody tr td {
+            border: 1px solid rgb(35, 1, 255);
+            padding: 10px 20px;
+        }
+
+        td {
+            vertical-align: middle;
+            /* Aligns content vertically */
+        }
+
+        td .btn-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Centers buttons */
+            height: 100%;
+            /* Makes container take full td height */
+        }
+
+        /* Overlay styling for popups */
+        .overlay {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Popup content styling */
+        .overlay-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        /* Close button styling */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 28px;
+            border: none;
+            background: none;
+            color: black;
+            cursor: pointer;
+        }
+
+        /* Ensure the badge aligns properly on top-right of the bell */
+        #notificationBadge {
+            position: absolute;
+            top: 5px;
+            /* Moves badge higher */
+            right: -2px;
+            /* Moves badge slightly to the right */
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+            border-radius: 50%;
+        }
+
+        /* Style for user profile dropdown */
+        .profile-dropdown {
+            display: none;
+            /* Hidden by default */
+            position: absolute;
+            top: 50px;
+            /* Adjust distance below user icon */
+            right: 10px;
+            /* Align with the user icon */
+            background-color: #d9d9d9;
+            /* Light gray background */
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            min-width: 180px;
+            z-index: 1000;
+            border: 2px solid #007bff;
+            /* Blue border */
+        }
+
+        /* Style for username */
+        .profile-dropdown p {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+        }
+
+        /* Blue underline */
+        .profile-dropdown hr {
+            border: 1px solid blue;
+            margin: 5px 0;
+        }
+
+        /* Logout button */
+        .logout-btn {
+            width: 100%;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
+        /* Logout icon */
+        .logout-btn i {
+            margin-left: 5px;
+        }
+
     </style>
 </head>
 
@@ -113,35 +277,56 @@
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/about">About</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/contact">Contact</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="#">Help</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-bell"></i></a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-user-circle"></i></a></li>
+                <!-- 🔔 Notification Bell Icon -->
+                <li class="nav-item position-relative">
+                    <a class="nav-link" href="/api/v1/notifications" id="showNotifications">
+                        <i class="fas fa-bell position-relative"></i> <!-- Bell icon -->
+                        <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute" style="display: none;"></span>
+                    </a>
+                </li>
+
+                <!-- 👤 User Profile Icon -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#" id="showUserProfile">
+                        <i class="fas fa-user-circle"></i>
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>
+
+     <!-- 👤 User Profile Dropdown (Positioned below user icon) -->
+     <div id="userProfileDropdown" class="profile-dropdown">
+        <p id="profileUserName"></p>
+        <hr> <!-- Blue underline -->
+        <button class="logout-btn" onclick="logout()">Log Out <i class="fas fa-sign-out-alt"></i></button>
+        <hr> <!-- Blue underline -->
+        <button class="logout-btn" onclick="window.location.href='/api/v1/changePassword'">Change Password</button>
+    </div>
 
     <div class="container mt-4">
         <h3 class="welcome">Welcome, <%= spHead.name %>!</h3>
         <p>Let's spread our Gayatri Pariwar and make a better nation.</p>
 
-        <h4 class="mt-4">Recent Requests</h4>
+
         <div class="d-flex justify-content-between align-items-center">
-            <label for="eventDropdown"><strong>Select Event Type</strong></label>
+            <h4 id="eventTitle"  class="mt-4 fs-6 welcome">Recent Requests</h4>
             <select id="eventDropdown" class="form-select w-auto">
-                <option value="recent" selected>Pending & Assigned Events</option>
+                <option value="recent" selected>Assigned Events</option>
                 <option value="completed">Completed Events</option>
                 <option value="rejected">Rejected Events</option>
             </select>
         </div>
 
         <!-- Table -->
-        <div class="table-responsive mt-3">
-            <table class="table table-bordered text-center">
+        <div class="d-none d-md-block">
+            <table class="cust-table">
                 <thead>
                     <tr>
                         <th>Event Details</th>
                         <th>Date / Time</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th id="actionColumn">Action</th>
                     </tr>
                 </thead>
                 <tbody id="eventTableBody">
@@ -186,6 +371,7 @@
         }
     
         document.addEventListener("DOMContentLoaded", function () {
+            updateNotificationBadge();
             const eventDropdown = document.getElementById("eventDropdown");
             const eventTableBody = document.getElementById("eventTableBody");
     
@@ -194,13 +380,24 @@
             const completedEvents = <%- JSON.stringify(completedEventRequests) %>;
             const rejectedEvents = <%- JSON.stringify(rejectedEventRequests) %>;
     
-            function updateEventTable(eventType) {
+            function updateEventTable(selectedType) {
                 eventTableBody.innerHTML = "";
     
-                let selectedEvents = 
-                    eventType === "recent" ? recentEvents :
-                    eventType === "completed" ? completedEvents :
-                    rejectedEvents;
+                let selectedEvents ;
+                if (selectedType === "recent") {
+                    selectedEvents = recentEvents;
+                    eventTitle.textContent = "Your Recent Events";
+                    document.querySelector("th#actionColumn").style.display = ""; // Show Action Column
+                } else if (selectedType === "completed") {
+                    selectedEvents = completedEvents;
+                    eventTitle.textContent = "Your Completed Events";
+                    document.querySelector("th#actionColumn").style.display = "none"; // Hide Action Column
+                } else {
+                    selectedEvents = rejectedEvents;
+                    eventTitle.textContent = "Your Rejected Events";
+                    document.querySelector("th#actionColumn").style.display = "none"; // Hide Action Column
+                }
+
     
                 if (selectedEvents.length === 0) {
                     eventTableBody.innerHTML = `<tr><td colspan="4" class="text-center"><strong>No events found.</strong></td></tr>`;
@@ -228,6 +425,7 @@
                                     ${event.status}
                                 </span>
                             </td>
+                            ${selectedType === "recent" ? `
                             <td id="actions-${event.eventId}">
                                 ${event.status === "Pending" || event.status === "Assigned"
                                     ? `<button class="btn-approve" onclick="updateEventStatus('${event.eventId}', 'Approved')">Approve</button>
@@ -236,7 +434,7 @@
                                         ? `<button class="btn btn-success" onclick="updateEventStatus('${event.eventId}', 'Completed')">Mark as Done</button>`
                                         : ""
                                 }
-                            </td>
+                            </td>` : ""}
                         </tr>
                     `;
                 });
@@ -252,6 +450,63 @@
                 
             });
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const userProfileBtn = document.getElementById("showUserProfile");
+            const userProfileDropdown = document.getElementById("userProfileDropdown");
+            const profileUserName = document.getElementById("profileUserName");
+
+            const user = JSON.parse('<%- JSON.stringify(spHead) %>');
+
+            // Show or hide dropdown on click
+            userProfileBtn.addEventListener("click", function (event) {
+                userProfileDropdown.style.display =
+                    userProfileDropdown.style.display === "block" ? "none" : "block";
+                event.stopPropagation(); // Prevent closing immediately
+                profileUserName.innerHTML = user.name;
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener("click", function (event) {
+                if (!userProfileBtn.contains(event.target) && !userProfileDropdown.contains(event.target)) {
+                    userProfileDropdown.style.display = "none";
+                }
+            });
+        });
+
+        // Logout function
+        function logout() {
+            fetch("/api/v1/logout", { method: "POST" })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Logged out successfully!");
+                        window.location.href = "/api/v1/login";
+                    } else {
+                        alert("Logout failed. Try again.");
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        }
+        function changePassword(){
+            
+        }
+
+        function updateNotificationBadge() {
+            fetch("/api/v1/notifications/count")
+                .then(response => response.json())
+                .then(data => {
+                    const notificationBadge = document.getElementById("notificationBadge");
+
+                    if (data.count > 0) {
+                        notificationBadge.textContent = data.count;
+                        notificationBadge.style.display = "flex"; // Show badge
+                    } else {
+                        notificationBadge.style.display = "none"; // Hide badge if no notifications
+                    }
+                })
+                .catch(error => console.error("Error fetching notifications:", error));
+        }
     </script>
     
 
