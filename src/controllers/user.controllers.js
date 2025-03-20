@@ -270,7 +270,10 @@ const loginUser = asyncHandler(async (req, res) => {
                 .json({ success: true, redirectUrl: "/api/v1/spHead-dashboard" });
             break;
         case 'Admin':
-            res.json({ success: true, redirectUrl: "/admin-dashboard" });
+            res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json({ success: true, redirectUrl: "/api/v1/admin/dashboard" });
             break;
         case 'SuperAdmin':
             res.status(200)

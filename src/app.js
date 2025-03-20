@@ -46,10 +46,12 @@ app.use(express.static(path.join(process.cwd(), "frontend", "public")));
 //router import
 import Router from './routes/user.routes.js'
 import superAdminRoutes from './routes/superAdmin.routes.js'
+import adminRoutes from './routes/admin.routes.js'
 
   
 app.use("/api/v1",Router);
 app.use("/api/v1/superadmin", superAdminRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 // Use the global error handler (must be after routes)
 app.use(errorHandler);
