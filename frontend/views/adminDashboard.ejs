@@ -50,12 +50,12 @@
                     data.forEach(spHead => {
                         const row = `<tr>
                             <td>${spHead.name}</td>
-                            <td>${spHead.pincode}</td>
+                            <td>${spHead.pinCode}</td>
                             <td>${spHead.totalEvents}</td>
                             <td>${spHead.pendingEvents}</td>
                             <td>${spHead.rejectedEvents}</td>
                             <td>${spHead.completedEvents}</td>
-                            <td><button class="btn btn-info btn-sm">View Details</button></td>
+                            <td><button class="btn btn-info btn-sm" onclick="viewSPHeadDetails('${spHead._id}', '${spHead.name}', '${spHead.email}', '${spHead.phone}', '${spHead.state}', '${spHead.district}', '${spHead.pinCode}', '${spHead.address}')">View Details</button></td>
                         </tr>`;
                         tableBody.innerHTML += row;
                     });
@@ -99,6 +99,22 @@
                 })
                 .catch(error => console.error("Error:", error));
         }
+
+        function viewSPHeadDetails(id, name, email, phone, state, district, pinCode, address) {
+            document.getElementById("spHeadName").innerText = name;
+            document.getElementById("spHeadEmail").innerText = email;
+            document.getElementById("spHeadPhone").innerText = phone;
+            document.getElementById("spHeadState").innerText = state;
+            document.getElementById("spHeadDistrict").innerText = district;
+            document.getElementById("spHeadPinCode").innerText = pinCode;
+            document.getElementById("spHeadAddress").innerText = address;
+
+            document.getElementById("spHeadOverlay").style.display = "flex";
+        }
+
+        function closeOverlayForDetail() {
+            document.getElementById("spHeadOverlay").style.display = "none";
+        }
     </script>
     <style>
         body {
@@ -119,15 +135,60 @@
             background-color: #0000ff;
         }
 
-        .table th {
-            background-color: #4a00ff;
+        .cust-table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: separate;
+            /* Enables spacing */
+            border-spacing: 0 20px;
+            /* Adds 10px gap between rows */
+        }
+
+        thead {
+            background-color: rgb(35, 1, 255);
             color: white;
+            margin-bottom: 20px;
+        }
+
+        th {
+            padding: 10px 10px;
+            border-left: 1px solid white;
+            text-align: center;
+        }
+        td{
             text-align: center;
         }
 
-        .table td {
-            text-align: center;
-            vertical-align: middle;
+        /* Apply border-radius to first and last header cells */
+        table thead tr th:first-child,
+        #spHeadTableBody tr td:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        table thead tr th:last-child,
+        #spHeadTableBody tr td:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .corner {
+            border-radius: 10px;
+        }
+
+        .right-corner {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .left-corner {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        #spHeadTableBody tr td {
+            border: 1px solid rgb(35, 1, 255);
+            padding: 10px 20px;
         }
 
         /* Style for user profile dropdown */
@@ -184,6 +245,45 @@
         .logout-btn i {
             margin-left: 5px;
         }
+        .welcome {
+            border-bottom: 2px solid rgb(35, 1, 255);
+            padding-bottom: 5px;
+            width: fit-content;
+            font-size: 15px;
+        }
+
+         /* Overlay Styles */
+         .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .overlay-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 40%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            color: red;
+        }
     </style>
 </head>
 
@@ -220,38 +320,38 @@
     </div>
 
     <div class="container mt-4">
-        <h3>Admin Dashboard</h3>
+        <h3 class="welcome fw-bold">Admin Dashboard!</h3>
         <p>Admin can view SPHead details under assigned states for any selected month.</p>
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <%= user.state %>
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <h5 id="eventTitle" class="welcome"><%= user.state %></h5>
+            <div class="d-flex lex-row-reverse ms-1">
+                <select id="monthSelect" class="form-select w-auto">
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select> 
+                
+                
+                <select id="yearSelect" class="form-select w-auto">
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
+    
+                <button id="viewBtn" class="btn btn-primary">View</button>
             </div>
-            <select id="monthSelect" class="form-select w-auto">
-                <option value="01">January</option>
-                <option value="02">February</option>
-                <option value="03">March</option>
-                <option value="04">April</option>
-                <option value="05">May</option>
-                <option value="06">June</option>
-                <option value="07">July</option>
-                <option value="08">August</option>
-                <option value="09">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-            </select>
-
-            <select id="yearSelect" class="form-select w-auto">
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
-            </select>
-
-            <button id="viewBtn" class="btn btn-primary">View</button>
         </div>
 
-        <table class="table mt-4">
+        <table class="cust-table">
             <thead>
                 <tr>
                     <th>SP Head</th>
@@ -266,9 +366,24 @@
             <tbody id="spHeadTableBody">
                 <!-- Dynamic data will be inserted here -->
             </tbody>
+
         </table>
     </div>
 
+    
+    <!-- SPHead Details Overlay -->
+    <div id="spHeadOverlay" class="overlay">
+        <div class="overlay-content">
+            <span class="close-btn" onclick="closeOverlayForDetail();">&times;</span>
+            <h2 id="spHeadName"></h2>
+            <p><strong>Email:</strong> <span id="spHeadEmail"></span></p>
+            <p><strong>Phone:</strong> <span id="spHeadPhone"></span></p>
+            <p><strong>State:</strong> <span id="spHeadState"></span></p>
+            <p><strong>District:</strong> <span id="spHeadDistrict"></span></p>
+            <p><strong>Pin Code:</strong> <span id="spHeadPinCode"></span></p>
+            <p><strong>Address:</strong> <span id="spHeadAddress"></span></p>
+        </div>
+    </div>
 </body>
 
 </html>

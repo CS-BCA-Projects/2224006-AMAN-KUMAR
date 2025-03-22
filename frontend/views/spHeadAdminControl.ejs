@@ -7,6 +7,8 @@
     <title>SPHead Management</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://kit.fontawesome.com/a96a0fdf1a.js" crossorigin="anonymous"></script>
+    <script src="/JS/districtSelect.js"></script>
+
 
     <style>
         body {
@@ -125,6 +127,126 @@
         .logout-btn i {
             margin-left: 5px;
         }
+
+        .cust-table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: separate;
+            /* Enables spacing */
+            border-spacing: 0 20px;
+            /* Adds 10px gap between rows */
+        }
+
+        thead {
+            background-color: rgb(35, 1, 255);
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        th {
+            padding: 10px 10px;
+            border-left: 1px solid white;
+            text-align: center;
+        }
+
+        td {
+            text-align: center;
+        }
+
+        /* Apply border-radius to first and last header cells */
+        table thead tr th:first-child,
+        #spHeadTableBody tr td:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        table thead tr th:last-child,
+        #spHeadTableBody tr td:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .corner {
+            border-radius: 10px;
+        }
+
+        .right-corner {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .left-corner {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        #spHeadTableBody tr td {
+            border: 1px solid rgb(35, 1, 255);
+            padding: 10px 20px;
+        }
+
+        .welcome {
+            border-bottom: 2px solid rgb(35, 1, 255);
+            padding-bottom: 5px;
+            width: fit-content;
+            font-size: 15px;
+        }
+
+        /* Initially Hide Modal */
+        .hidden {
+            display: none;
+        }
+
+        /* Modal Box */
+        .addspheadBox {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 35%;
+            height: 85%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Modal Title */
+        .addspheadBox h2 {
+            margin-bottom: 15px;
+            font-size: 22px;
+            color: #333;
+        }
+
+        /* Form Styles */
+        .addspheadBox form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Input Fields */
+        .addspheadBox label {
+            font-weight: bold;
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        .addspheadBox input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        /* Buttons */
+        .addspheadBox button {
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
     </style>
 </head>
 
@@ -162,12 +284,14 @@
     </div>
 
     <div class="container mt-4">
-        <h3>SPHead Management</h3>
+        <h3 class="welcome fw-bold">Welcome!</h3>
         <p>Admin can manage SPHeads by adding, updating, or deleting them.</p>
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <h5 id="eventTitle" class="welcome">SpHead Management</h5>
+            <button class="btn btn-primary mb-3" onclick="showAddSPHeadForm()">+ Add SPHead</button>
+        </div>
 
-        <button class="btn btn-primary mb-3" onclick="showAddSPHeadForm()">+ Add SPHead</button>
-
-        <table class="table mt-4">
+        <table class="cust-table">
             <thead>
                 <tr>
                     <th>SP Head</th>
@@ -185,7 +309,7 @@
     <!-- SPHead Details Overlay -->
     <div id="spHeadOverlay" class="overlay">
         <div class="overlay-content">
-            <span class="close-btn" onclick="closeOverlay()">&times;</span>
+            <span class="close-btn" onclick="closeOverlayForDetail();">&times;</span>
             <h2 id="spHeadName"></h2>
             <p><strong>Email:</strong> <span id="spHeadEmail"></span></p>
             <p><strong>Phone:</strong> <span id="spHeadPhone"></span></p>
@@ -206,15 +330,47 @@
             <input type="email" id="updateSPHeadEmail" placeholder="Email" class="form-control mb-2">
             <input type="text" id="updateSPHeadPhone" placeholder="Phone" class="form-control mb-2">
             <input type="text" id="updateSPHeadAddress" placeholder="Address" class="form-control mb-2">
-            <input type="text" id="updateSPHeadPinCode" placeholder="Pin Code" class="form-control mb-2">
             <button class="btn btn-success" onclick="updateSPHead()">Save Changes</button>
         </div>
     </div>
 
-    <script>
+    <div id="addSPHeadModal" class="overlay">
+        <div class="addspheadBox">
+            <h3 class="welcome">Add New SPHead</h3>
+            <form id="addSPHeadForm">
+                <input type="text" id="spheadName" placeholder="Name" required />
 
+                <input type="email" id="spheadEmail" placeholder="Email" required />
+
+                <input type="text" id="spheadPhone" placeholder="Phone" required />
+
+                <input type="text" id="spheadAddress" placeholder="Address" required />
+
+                <input type="text" id="spheadPinCode" placeholder="PinCode" required />
+                <!-- State & District Row -->
+                <div class="mb-3 row">
+                    <div class="col-md-6">
+                        <input type="text" id="spheadState" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-6">
+                        <select id="spheadDistrict" class="form-control" aria-placeholder="District" required>
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-row justify-content-center">
+                    <button type="submit" id="submitNewSPHeadDetail" class="btn btn-primary btn-sm">Add SPHead</button>
+                    <button type="button" onclick="closeOverlay()" class="btn btn-danger btn-sm ms-4">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const spHeads = <%- JSON.stringify(spHeads) %>; // Get data from EJS
+            const spHeads = JSON.parse('<%- JSON.stringify(spHeads) %>'); // Get data from EJS
             const tableBody = document.getElementById("spHeadTableBody");
 
             function renderSPHeads() {
@@ -224,11 +380,13 @@
 
                     row.innerHTML = `
                     <td>${spHead.name}</td>
-                    <td>${spHead.pincode ? spHead.pincode : "No Pin Code Found"}</td>
+                    <td>${spHead.pinCode ? spHead.pinCode : "No Pin Code Found"}</td>
                     <td>
-                        <button class="btn btn-success btn-sm" onclick="showUpdateSPHeadForm('${spHead._id}', '${spHead.name}', '${spHead.email}', '${spHead.phone}', '${spHead.state}', '${spHead.district}', '${spHead.pincode}', '${spHead.address}')">Update</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteSPHead('${spHead._id}')">Delete</button>
-                        <button class="btn btn-info btn-sm" onclick="viewSPHeadDetails('${spHead._id}', '${spHead.name}', '${spHead.email}', '${spHead.phone}', '${spHead.state}', '${spHead.district}', '${spHead.pincode}', '${spHead.address}')">View Details</button>
+                        <div class = "d-flex flex-row justify-content-around align-items-center p-2">
+                            <button class="btn btn-success btn-sm" onclick="showUpdateSPHeadForm('${spHead._id}', '${spHead.name}', '${spHead.email}', '${spHead.phone}', '${spHead.state}', '${spHead.district}', '${spHead.pinCode}', '${spHead.address}')">Update</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSPHead('${spHead._id}')">Delete</button>
+                            <button class="btn btn-info btn-sm" onclick="viewSPHeadDetails('${spHead._id}', '${spHead.name}', '${spHead.email}', '${spHead.phone}', '${spHead.state}', '${spHead.district}', '${spHead.pinCode}', '${spHead.address}')">View Details</button>
+                        </div>
                     </td>
                 `;
 
@@ -276,29 +434,28 @@
                 .catch(error => console.error("Error:", error));
         }
 
-        function viewSPHeadDetails(id, name, email, phone, state, district, pincode, address) {
+        function viewSPHeadDetails(id, name, email, phone, state, district, pinCode, address) {
             document.getElementById("spHeadName").innerText = name;
             document.getElementById("spHeadEmail").innerText = email;
             document.getElementById("spHeadPhone").innerText = phone;
             document.getElementById("spHeadState").innerText = state;
             document.getElementById("spHeadDistrict").innerText = district;
-            document.getElementById("spHeadPinCode").innerText = pincode;
+            document.getElementById("spHeadPinCode").innerText = pinCode;
             document.getElementById("spHeadAddress").innerText = address;
 
             document.getElementById("spHeadOverlay").style.display = "flex";
         }
 
-        function closeOverlay() {
+        function closeOverlayForDetail() {
             document.getElementById("spHeadOverlay").style.display = "none";
         }
 
-        function showUpdateSPHeadForm(id, name, email, phone, state, district, pincode, address) {
+        function showUpdateSPHeadForm(id, name, email, phone, state, district, pinCode, address) {
             document.getElementById("updateSPHeadId").value = id;
             document.getElementById("updateSPHeadName").value = name;
             document.getElementById("updateSPHeadEmail").value = email;
             document.getElementById("updateSPHeadPhone").value = phone;
             document.getElementById("updateSPHeadAddress").value = address;
-            document.getElementById("updateSPHeadPinCode").value = pincode;
 
             document.getElementById("updateSPHeadModal").style.display = "flex";
         }
@@ -313,19 +470,120 @@
             const email = document.getElementById("updateSPHeadEmail").value;
             const phone = document.getElementById("updateSPHeadPhone").value;
             const address = document.getElementById("updateSPHeadAddress").value;
-            const pincode = document.getElementById("updateSPHeadPinCode").value;
 
             fetch(`/api/v1/admin/spheads/update/${spHeadId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, phone, address, pincode })
+                body: JSON.stringify({ name, email, phone, address })
             })
                 .then(response => response.json())
-                .then(() => {
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message); // ✅ Show success message
+                    } else {
+                        alert("Error updating SPHead");
+                    }
                     location.reload();
                 })
-                .catch(error => console.error("Error updating SPHead:", error));
+                .catch(error => {
+                    console.error("Error updating SPHead:", error);
+                    alert("Failed to update SPHead. Please try again.");
+                });
         }
+
+
+        function setAdminState(adminState) {
+            const stateInput = document.getElementById("spheadState");
+            const districtSelect = document.getElementById("spheadDistrict");
+
+            // Set the state field and disable it
+            stateInput.value = adminState;
+            stateInput.setAttribute("readonly", true);  // Prevents user from changing it
+
+            // Populate the district dropdown
+            districtSelect.innerHTML = '<option value="">Select District</option>';
+            if (window.districtData[adminState]) {
+                window.districtData[adminState].forEach(district => {
+                    let option = document.createElement("option");
+                    option.value = district;
+                    option.textContent = district;
+                    districtSelect.appendChild(option);
+                });
+            }
+        }
+
+
+        function showAddSPHeadForm() {
+            document.getElementById("addSPHeadModal").style.display = "flex";
+            const user = JSON.parse('<%- JSON.stringify(user) %>');
+            const adminState = user.state;
+
+            setAdminState(adminState);
+
+            // Fix: Pass the function reference, not the immediate call
+            document.getElementById("addSPHeadForm").addEventListener("submit", submitSPHeadForm);
+        }
+
+
+        function closeOverlay() {
+            document.getElementById("addSPHeadModal").style.display = "none";
+        }
+
+        function submitSPHeadForm(event) {
+            event.preventDefault();
+
+            const spHeadData = {
+                name: document.getElementById("spheadName").value,
+                email: document.getElementById("spheadEmail").value,
+                phone: document.getElementById("spheadPhone").value,
+                state: document.getElementById("spheadState").value,
+                district: document.getElementById("spheadDistrict").value,
+                address: document.getElementById("spheadAddress").value,
+                pinCode: document.getElementById("spheadPinCode").value,
+            };
+
+            fetch("/api/v1/admin/spheads/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(spHeadData),
+            })
+                .then(async response => {
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || "Failed to add SPHead");
+                    }
+
+                    alert("✅ SPHead added successfully!");
+                    closeOverlay();
+                    location.reload(); // Reload to reflect changes
+                })
+                .catch(error => {
+                    alert("❌ Error: " + error.message);
+                    console.error("Error adding SPHead:", error);
+                });
+        }
+        function deleteSPHead(spHeadId) {
+            if (!confirm("Are you sure you want to delete this SPHead?")) {
+                return; // Stop if the user cancels the confirmation
+            }
+
+            fetch(`/api/v1/admin/spheads/delete/${spHeadId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message); // ✅ Show success or error message from the backend
+                    location.reload(); // ✅ Reload the page to reflect changes
+                })
+                .catch(error => {
+                    console.error("Error deleting SPHead:", error);
+                    alert("Failed to delete SPHead. Please try again.");
+                });
+        }
+
+
     </script>
 
 </body>

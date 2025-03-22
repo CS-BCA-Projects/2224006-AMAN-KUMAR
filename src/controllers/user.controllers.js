@@ -177,14 +177,14 @@ const feedContact = asyncHandler(async (req, res) => {
     if ([name, address, state, district, pinCode, phone].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All Fields are required");
     }
-
+    
     try {
         // Await the function call to get latitude & longitude
         const location = await findLanLon(pinCode);
 
         // Check if location is null or missing lat/lon
         if (!location || !location.lat || !location.lon) {
-            return res.status(400).json({ error: "Invalid pincode. Unable to fetch latitude and longitude." });
+            return res.status(400).json({ error: "Invalid pinCode. Unable to fetch latitude and longitude." });
         }
 
         console.log("Latitude:", location.lat);

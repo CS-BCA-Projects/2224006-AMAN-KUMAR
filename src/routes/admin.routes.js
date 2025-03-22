@@ -10,7 +10,6 @@ router.route("/dashboard").get( verifyJWT, (req, res) => {
 });
 
 router.route("/spheads").get( verifyJWT,getSPHeadDetails);
-
 router.route("/sphead-control").get(verifyJWT,getSPHeads);       // Get all SPHeads
 router.route("/spheads/add").post(verifyJWT,createSPHead);    // Create a new SPHead
 router.route("/spheads/update/:id").put(verifyJWT, updateSPHead); // Update an SPHead
