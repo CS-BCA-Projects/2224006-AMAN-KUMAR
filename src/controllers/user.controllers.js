@@ -817,6 +817,34 @@ const about = asyncHandler(async (req, res) => {
 const contactPage = asyncHandler(async (req, res) => {
     res.render('contactPage')
 });
+
+const sendMessage = asyncHandler(async(req,res) => {
+    const {name , email, subject, message } = req.body;
+
+    console.log("Message recived : ",{name , email, subject, message })
+    if(!name ||  !email || !subject, !message ){
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const emailSent = await sendEmail(
+        email,
+        subject,
+        `<p>Hello,</p>
+        <p>You have received a new message from <bold> ${name} </bold> to your website contact form.</p>
+        <p>${message}</p>
+           <p>🔗 Please respond as soon as possible.</p>
+           
+        <div class="text-center mt-4">
+            <p class="text-muted">Thank you! <br> <strong>Your Website Team</strong></p>
+        </div>`
+    );
+
+    if(!emailSent){
+        throw new ApiError(500, "Unable to send the email")
+    }
+
+    return res.status(200).json(new ApiResponse(200,{},"Response send to the team members")) 
+})
 const spHeadDashboard = asyncHandler(async (req, res) => {
     const spHeadId = req.user._id.toString(); // Convert to String to match assignedTo
 
@@ -1007,5 +1035,6 @@ export {
     cancelEventRequest,
     updateEventStatus,
     helpSection,
-    changePasswordPage
+    changePasswordPage,
+    sendMessage
 };

@@ -38,8 +38,10 @@
         .signup-container {
             margin: 20px auto;
         }
-        .headline{
-            border-bottom: 2px solid rgb(35, 1, 255); /* Thickness & color of underline */
+
+        .headline {
+            border-bottom: 2px solid rgb(35, 1, 255);
+            /* Thickness & color of underline */
             padding-bottom: 5px;
             width: fit-content;
             font-size: 24px;
@@ -47,29 +49,27 @@
         }
 
         .signup-box {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-            align-items: center;
-            background: #e5e5e5;
+            background-color: #e5e5e5;
             border-radius: 10px;
+            display: flex;
+            align-items: center;
             overflow: hidden;
-            height: 350px;
-            width: 700px;
-            margin: 20px auto;
+            width: 70%;
+            margin: 50px auto;
         }
 
         .signup-img {
-            width: 45%;
-            height: 355px;
+            flex: 1;
+            width: 35%;
+            /* Decrease width as per requirement */
+            height: 340px;
+            width: 220px;
             object-fit: cover;
         }
 
         .signup-form {
             flex: 1;
-            padding: 30px;
-            background: #dcdcdc;
-            width: 370px;
+            padding: 20px;
         }
 
         .form-control {
@@ -93,6 +93,20 @@
             font-size: 14px;
             margin-top: 5px;
         }
+
+        @media (max-width: 768px) {
+            .signup-box {
+                background-color: transparent;
+                flex-direction: column;
+            }
+
+            .signup-img{
+                width: 60vw;
+                height: 70vh;
+                border-radius: 10px;
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 
@@ -108,7 +122,7 @@
     <div class="container mt-4">
         <h3 class="headline">Join Us Today!</h3>
         <p>Let's connect together to build a good nation.</p>
-        <div class="signup-box d-flex flex-row">
+        <div class="signup-box">
             <img src="/images/mataji.jpg" alt="Guru Image" class="signup-img">
             <div class="signup-form">
                 <h4 class="mb-3">Sign-Up</h4>
@@ -117,11 +131,12 @@
                         <input type="email" class="form-control fw-light" id="email" placeholder="Email" required>
                     </div>
                     <div class="mb-3">
-                        <input type="password" class="form-control fw-light" id="password" placeholder="Password" required>
+                        <input type="password" class="form-control fw-light" id="password" placeholder="Password"
+                            required>
                     </div>
                     <div class="mb-3">
-                        <input type="password" class="form-control fw-light" id="cnfPassword" placeholder="Confiorm Password"
-                            required>
+                        <input type="password" class="form-control fw-light" id="cnfPassword"
+                            placeholder="Confiorm Password" required>
                         <p class="pass error"></p>
                     </div>
                     <button type="submit" class="btn btn-primary">Create Account</button>

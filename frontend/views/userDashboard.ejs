@@ -232,7 +232,8 @@
         }
 
         /* Style for username */
-        .profile-dropdown p {
+        .profile-dropdown p ,
+        .profile-dropdown li{
             font-size: 16px;
             font-weight: bold;
             text-align: center;
@@ -265,42 +266,52 @@
         .logout-btn i {
             margin-left: 5px;
         }
+        .menu-box{
+            top : 50px;
+            left: 100%;
+        }
     </style>
 </head>
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark px-3">
+    <nav class="navbar navbar-expand-lg d-flex justify-content-between px-3">
         <div class="d-flex align-items-center">
             <img src="/images/logo.jpg" alt="AWGP Logo" width="50" height="50" class="logo-img">
             <h4 class="ms-2 fs-6 fw-light text-white">AWGP Seva Portal</h4>
         </div>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link text-white" href="/api/v1/user-dashboard">Home</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="/api/v1/about">About</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="/api/v1/contact">Contact</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="/api/v1/help">Help</a></li>
-
+        <div class="d-flex align-items-center">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="menu-bar-box">
+                    <li class="nav-item"><a class="nav-link text-white" href="/api/v1/user-dashboard">Home</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/api/v1/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/api/v1/contact">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/api/v1/help">Help</a></li>
+                </ul>
+            </div>
+            <ul class="navbar-nav ms-auto d-flex flex-row ">
                 <!-- 🔔 Notification Bell Icon -->
-                <li class="nav-item position-relative">
+                <li class="nav-item position-relative ">
                     <a class="nav-link" href="/api/v1/notifications" id="showNotifications">
                         <i class="fas fa-bell position-relative"></i> <!-- Bell icon -->
-                        <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute" style="display: none;"></span>
+                        <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute"
+                            style="display: none;"></span>
                     </a>
                 </li>
 
                 <!-- 👤 User Profile Icon -->
-                <li class="nav-item">
+                <li class="nav-item ms-3 me-3">
                     <a class="nav-link" href="#" id="showUserProfile">
                         <i class="fas fa-user-circle"></i>
                     </a>
                 </li>
             </ul>
+
+            <button class="navbar-toggler" id="menu-bar" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon " style="height: 16px; width: 16px;"></span>
+            </button>
         </div>
+
     </nav>
 
     <!-- 👤 User Profile Dropdown (Positioned below user icon) -->
@@ -363,6 +374,13 @@
             </table>
         </div>
 
+        <!-- Mobile View (Card Layout) -->
+        <div class="d-md-none">
+            <h5 class="text-center bg-primary text-white p-2 rounded mt-4">Details</h5>
+            <div id="eventCardsContainer">
+                <!-- Dynamically filled via JavaScript -->
+            </div>
+        </div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -374,6 +392,7 @@
             const eventDropdown = document.getElementById("eventDropdown");
             const eventTitle = document.getElementById("eventTitle");
             const eventTableBody = document.getElementById("eventTableBody");
+            const eventCardsContainer = document.getElementById("eventCardsContainer")
 
             // ✅ Fix: Wrap JSON data in quotes
             const user = JSON.parse('<%- JSON.stringify(user) %>');
@@ -383,6 +402,7 @@
 
             function updateEventTable(selectedType) {
                 eventTableBody.innerHTML = ""; // Clear previous content
+                eventCardsContainer.innerHTML = ""
 
                 let selectedEvents;
                 if (selectedType === "recent") {
@@ -427,10 +447,29 @@
                             </td>
                             ${selectedType === "recent" ? `
                             <td class="btn-container">
-                                <button class="btn btn-success edit-btn" data-id="${event._id}">Update</button>
-                                <button class="btn btn-danger cancel-btn" data-id="${event._id}">Cancel</button>
+                                <button class="btn btn-success edit-btn mt-2" data-id="${event._id}">Update</button>
+                                <button class="btn btn-danger cancel-btn mt-2" data-id="${event._id}">Cancel</button>
                             </td>` : ""}
                         </tr>
+                    `;
+
+                    // **Mobile Card View**
+                    eventCardsContainer.innerHTML += `
+                        <div class="card p-2 mt-4 border-primary mb-4">
+                            <p><strong>${user.name}</strong></p>
+                            <p><strong>Event:</strong> ${event.eventType}</p>
+                            <p><strong>Address:</strong> ${user.address || "Not Provided"}, ${user.state || "N/A"}</p>
+                            <p><strong>Pin:</strong> ${user.pinCode || "N/A"}</p>
+                            <p><strong>M.no:</strong> ${user.phone || "N/A"}</p>
+                            <p><strong>Date:</strong> ${new Date(event.requested_date).toLocaleDateString("en-CA")}</p>
+                            <p><strong>Time:</strong> ${event.requested_time}</p>
+                            <p><strong>Status:</strong> <span class="event-status ${event.status.toLowerCase()}">${event.status}</span></p>
+                            ${selectedType === "recent" ? `
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-success w-50 edit-btn me-2" data-id="${event._id}">Update</button>
+                                <button class="btn btn-danger w-50 cancel-btn ms-2 " data-id="${event._id}">Cancel</button>
+                            </div>` : ""}
+                        </div>
                     `;
                 });
             }
