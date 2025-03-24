@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken"
 import mongoose from 'mongoose';
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
+import receiveEmail from '../utils/receiveEmail.js';
 import EventRequest from '../models/eventRequest.models.js';
 import { getMatchingSPHeads } from '../utils/getMatchingSPHeads.js';
 import { haversineDistance } from '../utils/haversineDistance.js';
@@ -822,7 +823,7 @@ const sendMessage = asyncHandler(async(req,res) => {
         throw new ApiError(400, "All fields are required");
     }
 
-    const emailSent = await sendEmail(
+    const emailSent = await receiveEmail(
         email,
         subject,
         `<p>Hello,</p>
