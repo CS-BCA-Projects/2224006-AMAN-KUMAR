@@ -47,8 +47,9 @@ app.use(express.static(path.join(process.cwd(), "frontend", "public")));
 import Router from './routes/user.routes.js'
 import superAdminRoutes from './routes/superAdmin.routes.js'
 import adminRoutes from './routes/admin.routes.js'
+import dashboardRoute from './routes/dashboard.routes.js'
 
-  
+app.use("/",dashboardRoute)
 app.use("/api/v1",Router);
 app.use("/api/v1/superadmin", superAdminRoutes);
 app.use("/api/v1/admin", adminRoutes);

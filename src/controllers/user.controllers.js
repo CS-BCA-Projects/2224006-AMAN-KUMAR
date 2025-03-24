@@ -33,10 +33,6 @@ const generateAccessAndRefreshTokens = async (userId) => {
     }
 }
 
-const dashboard = asyncHandler(async (req, res) => {
-    res.render("dashboard")
-})
-
 const login = asyncHandler(async (req, res) => {
     res.render('login');
 });
@@ -1006,7 +1002,6 @@ const helpSection = asyncHandler(async (req, res) => {
 
 
 export {
-    dashboard,
     login,
     signUp,
     about,

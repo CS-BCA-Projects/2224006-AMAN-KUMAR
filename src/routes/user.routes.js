@@ -1,13 +1,11 @@
 import { Router } from 'express';
-import { dashboard,login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent, about, contactPage, spHeadDashboard,updateEventStatus, updateEventDetails, renderUpdatePage, cancelEventRequest, helpSection, changeCurrentPassword, changePasswordPage, sendMessage} from '../controllers/user.controllers.js';
+import { login,signUp, registerUser,feedContact,verifyEmail, loginUser,logoutUser,refreshAccessToken, forgotPassword, resetPassword, verifyEmailPage, contactDetails, resetPasswordPage, userDashboard, addEvent,registerEvent, about, contactPage, spHeadDashboard,updateEventStatus, updateEventDetails, renderUpdatePage, cancelEventRequest, helpSection, changeCurrentPassword, changePasswordPage, sendMessage} from '../controllers/user.controllers.js';
 import { deleteNotification, getUserNotifications, notificationCount } from '../controllers/notification.controllers.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { authorizeRoles } from '../middlewares/authorizeRole.middleware.js';
 
 const router = Router();
 
-// Correct way to define routes
-router.get("/dashboard",dashboard)
 router.get("/help",helpSection)
 router.get("/login",login)
 router.get("/sign-up",signUp)
