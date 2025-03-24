@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { ApiError } from './ApiError.js';
 
 const sendEmail = async (from,to, subject, html) => {
     try {
@@ -22,8 +23,7 @@ const sendEmail = async (from,to, subject, html) => {
         await transporter.sendMail(mailOptions);
         return true;
     } catch (error) {
-        console.error("Error sending email:", error);
-        return false;
+        throw new ApiError("Error sending email:", error);
     }
 };
 

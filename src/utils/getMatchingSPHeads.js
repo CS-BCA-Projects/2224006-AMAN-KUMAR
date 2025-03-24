@@ -3,7 +3,6 @@ import { asyncHandler } from "./asyncHandler.js";
 import { ApiError } from "./ApiError.js";
 
 const getMatchingSPHeads = async function (userState, userDistrict) {
-    console.log("Inside getMatchongSPHeads")
     try {
         const spHeads = await User.aggregate([
             {

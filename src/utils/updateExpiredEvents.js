@@ -1,4 +1,5 @@
 import EventRequest from "../models/eventRequest.models.js"; // Adjust based on your structure
+import { ApiError } from "./ApiError.js";
 
 const timeSlotExpiry = {
     "Morning": 12,  // 12:00 PM
@@ -43,10 +44,9 @@ const updateExpiredEvents = async (userId) => {
                 { _id: { $in: expiredEventIds } },
                 { $set: { status: "Rejected" } }
             );
-            console.log(`${expiredEventIds.length} expired events have been rejected.`);
         }
     } catch (error) {
-        console.error("Error updating expired events:", error);
+        throw new ApiError(400,"Error updating expired events:", error);
     }
 };
 

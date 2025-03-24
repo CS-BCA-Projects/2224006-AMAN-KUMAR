@@ -44,7 +44,6 @@ const signUp = asyncHandler(async (req, res) => {
 
 const registerUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-    console.log("Email : ", email + "Password : ", password);
 
     if ([email, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All Fields are required")
@@ -183,18 +182,9 @@ const feedContact = asyncHandler(async (req, res) => {
         if (!location || !location.lat || !location.lon) {
             return res.status(400).json({ error: "Invalid pinCode. Unable to fetch latitude and longitude." });
         }
-
-        console.log("Latitude:", location.lat);
-        console.log("Longitude:", location.lon);
-
         // Extract latitude and longitude
         const lat = location.lat;
         const lon = location.lon;
-
-        console.log("Full Name:", name);
-        console.log("Address:", address);
-        console.log("Pin Code:", pinCode);
-        console.log("Phone Number:", phone);
 
         try {
             user.name = name;
@@ -225,7 +215,6 @@ const feedContact = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body
-    console.log(email, password)
 
     if (!email || !password) {
         throw new ApiError(400, "All feilds are required")
@@ -249,8 +238,6 @@ const loginUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     }
-
-    console.log(user);
 
     //Set up session (implementation not shown)
     switch (user.role) {
@@ -359,11 +346,9 @@ const changePasswordPage = asyncHandler(async (req, res) => {
 })
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
-    console.log(oldPassword, newPassword)
+
     const user = await User.findById(req.user?._id);
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
-
-    console.log(isPasswordCorrect)
 
     if (!isPasswordCorrect) {
         throw new ApiError(404, "Password Incorrect");
@@ -511,7 +496,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 const getLoggedInUserDetails = asyncHandler(async (req, res) => {
     const user = req.user;
     const userId = user._id.toString();
-    console.log("User Id Is : ", userId)
+
     try {
         const userDetails = await User.aggregate([
             {
@@ -578,7 +563,6 @@ const userDashboard = asyncHandler(async (req, res) => {
     const user = req.user;
     const userId = user._id.toString(); // ✅ Convert ObjectId to String
 
-    console.log("User Id Is:", userId);
     await updateExpiredEvents(userId); // Check & reject expired events
     try {
         const userDetails = await User.aggregate([
@@ -641,7 +625,6 @@ const userDashboard = asyncHandler(async (req, res) => {
             }
         ]);
 
-        console.log("User Details Are:", userDetails[0].recentEventRequest);
         res.render("userDashboard", {
             user: userDetails[0] || {},
             recentEvents: userDetails[0]?.recentEventRequest || [],
@@ -666,8 +649,6 @@ const registerEvent = asyncHandler(async (req, res) => {
     }
 
     const { eventType, requested_date, requested_time, description = "" } = req.body;
-    console.log("Event:", eventType, "\nRequested Date:", requested_date, "\nRequested Time:", requested_time);
-    console.log("User is:", user);
 
     if (!eventType || !requested_date || !requested_time) {
         throw new ApiError(400, "Event type, date, and time are required");
@@ -680,28 +661,18 @@ const registerEvent = asyncHandler(async (req, res) => {
 
     const { lat, lon, state, district } = req.user;
 
-    console.log("Received Location Data:", { lat, lon, state, district });
-
     let nearestSPHead = null;
     let minDistance = Infinity;
 
     try {
-        console.log(`🔍 Searching for SPHeads in: ${district}, ${state}`);
-
         const spHeads = await getMatchingSPHeads(state, district);
 
         if (!spHeads || spHeads.length === 0) {
-            console.log("⚠️ No SPHeads found in this location");
             return null;
         }
 
-        console.log(`✅ Found ${spHeads.length} SPHeads, calculating distances...`);
-
         for (const spHead of spHeads) {
             const distance = haversineDistance(lat, lon, spHead.lat, spHead.lon);
-
-            console.log(`📏 Distance to SPHead (${spHead.name}): ${distance} km`);
-
             if (distance === 0) nearestSPHead = spHead;
 
             if (distance <= 15 && distance < minDistance) {
@@ -711,12 +682,10 @@ const registerEvent = asyncHandler(async (req, res) => {
         }
 
         if (!nearestSPHead) {
-            console.log("❌ No SPHead found within 15 km range.");
-        } else {
-            console.log(`🎯 Nearest SPHead: ${nearestSPHead.name} (${minDistance.toFixed(2)} km away)`);
-        }
+            throw new ApiError(400,"No SPHead found within 15 km range.");
+        } 
     } catch (error) {
-        console.error("❌ Error in getNearestSPHead:", error);
+        console.error("Error in getNearestSPHead:", error);
         throw new ApiError(500, "Something went wrong, please retry");
     }
 
@@ -725,8 +694,6 @@ const registerEvent = asyncHandler(async (req, res) => {
     if (!eventAssignedTo) {
         return res.status(200).json(new ApiResponse(200, {}, "Event request is not available at your place"));
     }
-
-    console.log("Event assigned to:", eventAssignedTo);
 
     const requestedEvent = await EventRequest.create({
         requestedBy: user._id,
@@ -756,7 +723,7 @@ const renderUpdatePage = async (req, res) => {
         const { eventId } = req.params;
 
         const event = await EventRequest.findById(eventId);
-        console.log(event)
+
         if (!event) {
             return res.status(404).send("Event not found");
         }
@@ -785,7 +752,6 @@ const updateEventDetails = asyncHandler(async (req, res) => {
         await sendNotification(updatedEvent.assignedTo, `A event has been updated for ${updatedEvent.eventType} for Date : ${updatedEvent.requested_date}`)
         res.status(200).json({ success: true, message: "Event updated successfully", updatedEvent });
     } catch (error) {
-        console.error("Update error:", error);
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 });
@@ -818,7 +784,6 @@ const contactPage = asyncHandler(async (req, res) => {
 const sendMessage = asyncHandler(async(req,res) => {
     const {name , email, subject, message } = req.body;
 
-    console.log("Message recived : ",{name , email, subject, message })
     if(!name ||  !email || !subject, !message ){
         throw new ApiError(400, "All fields are required");
     }
@@ -845,7 +810,6 @@ const sendMessage = asyncHandler(async(req,res) => {
 const spHeadDashboard = asyncHandler(async (req, res) => {
     const spHeadId = req.user._id.toString(); // Convert to String to match assignedTo
 
-    console.log(spHeadId)
     await updateExpiredEvents(spHeadId);
     try {
         // **Step 1: Fetch SPHead details**
@@ -951,7 +915,6 @@ const spHeadDashboard = asyncHandler(async (req, res) => {
             rejectedEventRequests: []
         };
 
-        console.log("Assigned Events with eventId:", assignedEvents[0]); // ✅ Debugging Output
         res.render("spHeadDashboard", {
             spHead, // SPHead details
             allEvents: result.allEvents,
@@ -970,7 +933,7 @@ const updateEventStatus = asyncHandler(async (req, res) => {
     try {
         const { eventId } = req.params;
         const { status } = req.body; // "Approved" or "Rejected"
-        console.log(eventId, status)
+
         // Validate status
         if (!["Approved", "Rejected", "Completed"].includes(status)) {
             return res.status(400).json({ error: "Invalid status value" });
@@ -986,7 +949,7 @@ const updateEventStatus = asyncHandler(async (req, res) => {
         if (!updatedEvent) {
             return res.status(404).json({ error: "Event not found" });
         }
-        console.log(updatedEvent)
+
         await sendNotification(updatedEvent.requestedBy, `Event is  ${status} by the assigned spHead`);
         await sendNotification(updatedEvent.assignedTo, `Event is  ${status} by you for the requested ${updatedEvent.eventType} event.`)
         return res.json({ message: `Event status updated to ${status}`, updatedEvent });

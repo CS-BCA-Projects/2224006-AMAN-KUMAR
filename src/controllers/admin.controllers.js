@@ -87,7 +87,7 @@ const getSPHeadDetails = asyncHandler(async (req, res) => {
             }
         }
     ]);
-    console.log(spHeadDetails)
+
     res.status(200).json(spHeadDetails);
 });
 
@@ -102,7 +102,7 @@ const getSPHeads = asyncHandler(async (req, res) => {
 // ✅ Create a new SPHead
 const createSPHead = asyncHandler(async (req, res) => {
     const { name, email, phone, state, district, pinCode, address } = req.body;
-    console.log("Received data is : ", { name, email, phone, state, district, pinCode, address })
+
     // Check if SPHead with email already exists
     const existingSPHead = await User.findOne({ email });
     if (existingSPHead) {
@@ -131,7 +131,6 @@ const createSPHead = asyncHandler(async (req, res) => {
             password: "gurudev123" // Default password
         });
 
-        console.log("SpHead Details are : ", newSPHead)
         if (!newSPHead) {
             throw new ApiError(400, "Something went wrong! Please retry")
         }
@@ -146,7 +145,6 @@ const createSPHead = asyncHandler(async (req, res) => {
 const updateSPHead = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { name, email, phone, address } = req.body;
-    console.log("Received SPHead Data:", { name, email, phone, address });
 
     const updatedSPHead = await User.findById(id);
     updatedSPHead.name = name;

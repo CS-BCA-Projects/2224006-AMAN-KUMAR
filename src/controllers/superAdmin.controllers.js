@@ -31,8 +31,6 @@ const getAdmin = asyncHandler(async (req, res) => {
 const addAdmin = asyncHandler(async (req, res) => {
     const { email, name, phone, address, pinCode, state } = req.body;
 
-    console.log("Adding Admin:", email);
-
     // Check if Admin already exists
     let existingUser = await User.findOne({ email });
     if (existingUser) {
