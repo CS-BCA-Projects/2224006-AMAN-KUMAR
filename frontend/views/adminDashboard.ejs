@@ -41,10 +41,13 @@
                 .then(response => response.json())
                 .then(data => {
                     const tableBody = document.getElementById("spHeadTableBody");
+                    const mobileView = document.getElementById("spHeadMobileView");
                     tableBody.innerHTML = ""; // Clear previous data
+                    mobileView.innerHTML = "";
 
                     if (data.length === 0) {
                         tableBody.innerHTML = `<tr><td colspan="7" class="text-center">No records found</td></tr>`;
+                        mobileView.innerHTML = `<div class="text-center">No records found</div>`;
                         return;
                     }
 
@@ -59,6 +62,20 @@
                             <td><button class="btn btn-info btn-sm" onclick="viewSPHeadDetails('${spHead._id}', '${spHead.name}', '${spHead.email}', '${spHead.phone}', '${spHead.state}', '${spHead.district}', '${spHead.pinCode}', '${spHead.address}')">View Details</button></td>
                         </tr>`;
                         tableBody.innerHTML += row;
+
+                        // ✅ Mobile View Card
+                        const card = `<div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">${spHead.name}</h5>
+                                <p><strong>Pin Code:</strong> ${spHead.pinCode}</p>
+                                <p><strong>Total Events:</strong> ${spHead.totalEvents}</p>
+                                <p><strong>Pending:</strong> ${spHead.pendingEvents}</p>
+                                <p><strong>Rejected:</strong> ${spHead.rejectedEvents}</p>
+                                <p><strong>Completed:</strong> ${spHead.completedEvents}</p>
+                                <button class="btn btn-info btn-sm w-100" onclick="viewSPHeadDetails('${spHead._id}', '${spHead.name}', '${spHead.email}', '${spHead.phone}', '${spHead.state}', '${spHead.district}', '${spHead.pinCode}', '${spHead.address}')">View Details</button>
+                            </div>
+                        </div>`;
+                        mobileView.innerHTML += card;
                     });
                 })
                 .catch(error => console.error("Error fetching SPHead data:", error));
@@ -119,7 +136,8 @@
     </script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
+            width: 100%;
         }
 
         .logo-img {
@@ -156,7 +174,8 @@
             border-left: 1px solid white;
             text-align: center;
         }
-        td{
+
+        td {
             text-align: center;
         }
 
@@ -246,6 +265,7 @@
         .logout-btn i {
             margin-left: 5px;
         }
+
         .welcome {
             border-bottom: 2px solid rgb(35, 1, 255);
             padding-bottom: 5px;
@@ -253,8 +273,8 @@
             font-size: 15px;
         }
 
-         /* Overlay Styles */
-         .overlay {
+        /* Overlay Styles */
+        .overlay {
             display: none;
             position: fixed;
             top: 0;
@@ -285,16 +305,19 @@
             cursor: pointer;
             color: red;
         }
+
         @media (max-width : 991px) {
             #menu-bar-box {
                 background-color: #0000ff;
             }
-            .navbar-collapse{
+
+            .navbar-collapse {
                 position: absolute;
                 z-index: 100;
                 top: 60px;
                 left: 80%;
             }
+
             #menu-bar-box a {
                 color: black;
                 padding: 15px;
@@ -309,22 +332,24 @@
             <img src="/images/logo.jpg" alt="AWGP Logo" width="50" height="50" class="logo-img">
             <h4 class="ms-2 fs-6 fw-light text-white">AWGP Seva Portal</h4>
         </div>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto" id="menu-bar-box">
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/admin/dashboard">Home</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/admin/sphead-control">SP Head</a></li>
-
-                <!-- 👤 User Profile Icon -->
-                <li class="nav-item">
-                    <a class="nav-link" href="#" id="showUserProfile">
-                        <i class="fas fa-user-circle"></i>
-                    </a>
-                </li>
             </ul>
         </div>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="#" id="showUserProfile">
+                    <i class="fas fa-user-circle"></i>
+                </a>
+            </li>
+        </ul>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
     </nav>
     <!-- 👤 User Profile Dropdown (Positioned below user icon) -->
     <div id="userProfileDropdown" class="profile-dropdown">
@@ -339,9 +364,11 @@
         <h3 class="welcome fw-bold">Admin Dashboard!</h3>
         <p>Admin can view SPHead details under assigned states for any selected month.</p>
         <div class="d-flex justify-content-between align-items-center mt-4">
-            <h5 id="eventTitle" class="welcome"><%= user.state %></h5>
+            <h5 id="eventTitle" class="welcome">
+                <%= user.state %>
+            </h5>
             <div class="d-flex lex-row-reverse ms-1">
-                <select id="monthSelect" class="form-select w-auto">
+                <select id="monthSelect" class="form-select w-auto me-1">
                     <option value="01">January</option>
                     <option value="02">February</option>
                     <option value="03">March</option>
@@ -354,39 +381,49 @@
                     <option value="10">October</option>
                     <option value="11">November</option>
                     <option value="12">December</option>
-                </select> 
-                
-                
-                <select id="yearSelect" class="form-select w-auto">
+                </select>
+
+                <select id="yearSelect" class="form-select w-auto me-1">
                     <option value="2025">2025</option>
                     <option value="2024">2024</option>
                     <option value="2023">2023</option>
                 </select>
-    
-                <button id="viewBtn" class="btn btn-primary">View</button>
+
+                <button id="viewBtn" class="btn btn-primary me-1">View</button>
             </div>
         </div>
 
-        <table class="cust-table">
-            <thead>
-                <tr>
-                    <th>SP Head</th>
-                    <th>Pin Code</th>
-                    <th>Total Events</th>
-                    <th>Pending Events</th>
-                    <th>Rejected Events</th>
-                    <th>Completed Events</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="spHeadTableBody">
-                <!-- Dynamic data will be inserted here -->
-            </tbody>
+        <div class="table-responsive d-none d-md-block">
+            <table class="cust-table">
+                <thead>
+                    <tr>
+                        <th>SP Head</th>
+                        <th>Pin Code</th>
+                        <th>Total Events</th>
+                        <th>Pending Events</th>
+                        <th>Rejected Events</th>
+                        <th>Completed Events</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="spHeadTableBody">
+                    <!-- Dynamic data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
 
-        </table>
+
+        <!-- ✅ Mobile View Cards -->
+        <div class="d-block d-md-none" >
+            <h5 class="text-center bg-primary text-white p-2 rounded mt-4">Details</h5>
+            <div id="spHeadMobileView">
+
+            </div>
+        </div>
+
     </div>
 
-    
+
     <!-- SPHead Details Overlay -->
     <div id="spHeadOverlay" class="overlay">
         <div class="overlay-content">
@@ -400,6 +437,7 @@
             <p><strong>Address:</strong> <span id="spHeadAddress"></span></p>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
