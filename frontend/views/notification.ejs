@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/custom.css">
     <script src="https://kit.fontawesome.com/a96a0fdf1a.js" crossorigin="anonymous"></script>
     <style>
         body {
@@ -64,25 +65,43 @@
         .nav-link {
             color: white !important;
         }
+        @media (max-width : 991px) {
+            #menu-bar-box {
+                background-color: #0000ff;
+            }
+            .navbar-collapse{
+                position: absolute;
+                z-index: 100;
+                top: 60px;
+                left: 80%;
+            }
+            #menu-bar-box a {
+                color: black;
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark px-3 fixed-top">
-        <a class="navbar-brand d-flex align-items-center" href="/api/v1/user-dashboard">
-            <img src="/images/logo.jpg" alt="Logo">
-            <span class="ms-2 fs-6 fw-light">AWGP Seva Portal</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="/api/v1/user-dashboard">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="/api/v1/about">About</a></li>
-                <li class="nav-item"><a class="nav-link" href="/api/v1/contact">Contact</a></li>
-                <li class="nav-item"><a class="nav-link" href="/api/v1/help">Help</a></li>
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/api/v1/user-dashboard">
+                <img src="/images/logo.jpg" alt="Logo">
+                <span class="ms-2 fs-6 fw-light">AWGP Seva Portal</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" onclick="toggleNavbar()" >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse d-lg-flex d-none" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="menu-bar-box">
+                    <li class="nav-item"><a class="nav-link" href="/api/v1/user-dashboard">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/api/v1/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/api/v1/contact">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/api/v1/help">Help</a></li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -112,7 +131,7 @@
                             <% } %>
         </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         async function deleteNotification(notificationId) {
             try {
@@ -142,6 +161,9 @@
                 console.error("Error:", error);
                 alert("Error deleting notification.");
             }
+        }
+        function toggleNavbar() {
+            document.getElementById("mobileNav").classList.toggle("show");
         }
     </script>
 </body>

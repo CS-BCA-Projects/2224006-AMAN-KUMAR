@@ -94,6 +94,7 @@
             padding: 5px 10px;
             border-radius: 5px;
         }
+
         .cust-table {
             width: 100%;
             margin-top: 30px;
@@ -258,6 +259,27 @@
             margin-left: 5px;
         }
 
+        @media (max-width : 991px) {
+            #menu-bar-box {
+                background-color: #0000ff;
+            }
+
+            .navbar-collapse {
+                position: absolute;
+                z-index: 100;
+                top: 60px;
+                left: 80%;
+            }
+
+            #menu-bar-box a {
+                color: black;
+                padding: 15px;
+            }
+
+            #notifi a {
+                margin-left: 20px;
+            }
+        }
     </style>
 </head>
 
@@ -268,35 +290,39 @@
         <a class="navbar-brand" href="#">
             <img src="/images/logo.jpg" alt="Logo"> AWGP Seva Portal
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto" id="menu-bar-box">
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/spHead-dashboard">Home</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/about">About</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/contact">Contact</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="#">Help</a></li>
                 <!-- 🔔 Notification Bell Icon -->
-                <li class="nav-item position-relative">
-                    <a class="nav-link" href="/api/v1/notifications" id="showNotifications">
-                        <i class="fas fa-bell position-relative"></i> <!-- Bell icon -->
-                        <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute" style="display: none;"></span>
-                    </a>
-                </li>
-
-                <!-- 👤 User Profile Icon -->
-                <li class="nav-item">
-                    <a class="nav-link" href="#" id="showUserProfile">
-                        <i class="fas fa-user-circle"></i>
-                    </a>
-                </li>
             </ul>
         </div>
+        <ul class="navbar-nav ms-auto d-flex flex-row align-items-center justify-content-between">
+            <li class="nav-item position-relative me-3" id="notifi">
+                <a class="nav-link" href="/api/v1/notifications" id="showNotifications">
+                    <i class="fas fa-bell position-relative"></i> <!-- Bell icon -->
+                    <span id="notificationBadge" class="badge bg-danger rounded-circle position-absolute"
+                        style="display: none;"></span>
+                </a>
+            </li>
+
+            <!-- 👤 User Profile Icon -->
+            <li class="nav-item">
+                <a class="nav-link" href="#" id="showUserProfile">
+                    <i class="fas fa-user-circle"></i>
+                </a>
+            </li>
+        </ul>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
     </nav>
 
-     <!-- 👤 User Profile Dropdown (Positioned below user icon) -->
-     <div id="userProfileDropdown" class="profile-dropdown">
+    <!-- 👤 User Profile Dropdown (Positioned below user icon) -->
+    <div id="userProfileDropdown" class="profile-dropdown">
         <p id="profileUserName"></p>
         <hr> <!-- Blue underline -->
         <button class="logout-btn" onclick="logout()">Log Out <i class="fas fa-sign-out-alt"></i></button>
@@ -310,7 +336,7 @@
 
 
         <div class="d-flex justify-content-between align-items-center">
-            <h4 id="eventTitle"  class="mt-4 fs-6 welcome">Recent Requests</h4>
+            <h4 id="eventTitle" class="mt-4 fs-6 welcome">Recent Requests</h4>
             <select id="eventDropdown" class="form-select w-auto">
                 <option value="recent" selected>Assigned Events</option>
                 <option value="completed">Completed Events</option>
@@ -334,6 +360,14 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Mobile View (Card Layout) -->
+        <div class="d-md-none">
+            <h5 class="text-center bg-primary text-white p-2 rounded mt-4">Details</h5>
+            <div id="eventCardsContainer">
+                <!-- Dynamically filled via JavaScript -->
+            </div>
+        </div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -341,49 +375,52 @@
     <script>
         function updateEventStatus(eventId, status) {
             console.log("Updating Event ID:", eventId, "Status:", status);
-    
+
             fetch(`/api/v1/update-status/${eventId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    // ✅ Update event status text and color
-                    document.getElementById(`status-${eventId}`).textContent = status;
-                    document.getElementById(`status-${eventId}`).className = `event-status ${status.toLowerCase()}`;
-    
-                    // ✅ Update action buttons dynamically
-                    if (status === "Approved") {
-                        document.getElementById(`actions-${eventId}`).innerHTML =
-                            `<button class="btn btn-success" onclick="updateEventStatus('${eventId}', 'Completed')">
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        // ✅ Update event status text and color
+                        document.getElementById(`status-${eventId}`).textContent = status;
+                        document.getElementById(`status-${eventId}`).className = `event-status ${status.toLowerCase()}`;
+
+                        // ✅ Update action buttons dynamically
+                        if (status === "Approved") {
+                            document.getElementById(`actions-${eventId}`).innerHTML =
+                                `<button class="btn btn-success" onclick="updateEventStatus('${eventId}', 'Completed')">
                                 Mark as Done
                             </button>`;
-                    } else {
-                        document.getElementById(`actions-${eventId}`).innerHTML = "";
+                        } else {
+                            document.getElementById(`actions-${eventId}`).innerHTML = "";
+                        }
+                        location.reload();
                     }
-                }
-            })
-            .catch(error => console.error("Error updating event status:", error));
+                })
+                .catch(error => console.error("Error updating event status:", error));
         }
-    
+
         document.addEventListener("DOMContentLoaded", function () {
             updateNotificationBadge();
             const eventDropdown = document.getElementById("eventDropdown");
             const eventTableBody = document.getElementById("eventTableBody");
-    
+            const eventCardsContainer = document.getElementById("eventCardsContainer")
+
             // ✅ Ensure JSON data is correctly embedded in EJS
-            const recentEvents = <%- JSON.stringify(recentEventRequests) %>;
-            const completedEvents = <%- JSON.stringify(completedEventRequests) %>;
-            const rejectedEvents = <%- JSON.stringify(rejectedEventRequests) %>;
-    
+            const recentEvents = JSON.parse('<%- JSON.stringify(recentEventRequests) %>');
+            const completedEvents = JSON.parse('<%- JSON.stringify(completedEventRequests) %>');
+            const rejectedEvents = JSON.parse('<%- JSON.stringify(rejectedEventRequests) %>');
+
             function updateEventTable(selectedType) {
                 eventTableBody.innerHTML = "";
-    
-                let selectedEvents ;
+                eventCardsContainer.innerHTML = ""
+
+                let selectedEvents;
                 if (selectedType === "recent") {
                     selectedEvents = recentEvents;
                     eventTitle.textContent = "Your Recent Events";
@@ -398,12 +435,39 @@
                     document.querySelector("th#actionColumn").style.display = "none"; // Hide Action Column
                 }
 
-    
+                function getActionButtons(event, isMobile = false) {
+                    if (selectedType === "recent") {
+                        if (event.status === "Pending" || event.status === "Assigned") {
+                            return `
+                    <button class="btn btn-success btn-sm" onclick="updateEventStatus('${event.eventId}', 'Approved')">Approve</button>
+                    <button class="btn btn-danger btn-sm" onclick="updateEventStatus('${event.eventId}', 'Rejected')">Reject</button>
+                `;
+                        } else if (event.status === "Approved") {
+                            return `<button class="btn btn-primary btn-sm" onclick="updateEventStatus('${event.eventId}', 'Completed')">Mark as Done</button>`;
+                        }
+                    }
+                    return "";
+                }
+
+
+                function getStatusColor(status) {
+                    switch (status.toLowerCase()) {
+                        case "pending": return "warning";
+                        case "approved": return "primary";
+                        case "assigned": return "info";
+                        case "completed": return "success";
+                        case "rejected": return "danger";
+                        default: return "secondary";
+                    }
+                }
+
+
                 if (selectedEvents.length === 0) {
                     eventTableBody.innerHTML = `<tr><td colspan="4" class="text-center"><strong>No events found.</strong></td></tr>`;
+                    eventCardsContainer.innerHTML = `<div><p colspan="4" class="text-center"><strong>No events found.</strong></p></div>`;
                     return;
                 }
-    
+
                 selectedEvents.forEach(event => {
                     eventTableBody.innerHTML += `
                         <tr id="event-${event.eventId}">
@@ -428,26 +492,46 @@
                             ${selectedType === "recent" ? `
                             <td id="actions-${event.eventId}">
                                 ${event.status === "Pending" || event.status === "Assigned"
-                                    ? `<button class="btn-approve" onclick="updateEventStatus('${event.eventId}', 'Approved')">Approve</button>
+                                ? `<button class="btn-approve" onclick="updateEventStatus('${event.eventId}', 'Approved')">Approve</button>
                                        <button class="btn-reject" onclick="updateEventStatus('${event.eventId}', 'Rejected')">Reject</button>`
-                                    : event.status === "Approved"
-                                        ? `<button class="btn btn-success" onclick="updateEventStatus('${event.eventId}', 'Completed')">Mark as Done</button>`
-                                        : ""
-                                }
+                                : event.status === "Approved"
+                                    ? `<button class="btn btn-success" onclick="updateEventStatus('${event.eventId}', 'Completed')">Mark as Done</button>`
+                                    : ""
+                            }
                             </td>` : ""}
                         </tr>
                     `;
+                    // Mobile View Cards
+                    eventCardsContainer.innerHTML += `
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">${event.eventType}</h5>
+                                <p class="card-text">${event.description}</p>
+                                <p><strong>Requested By:</strong><br> ${event.requester.name}<br>
+                                    ${event.requester.email}<br>
+                                    ${event.requester.phone}<br>
+                                    ${event.requester.address}, ${event.requester.state} - ${event.requester.pinCode}
+                                </p>
+                                <p><strong>Date:</strong> ${new Date(event.requested_date).toLocaleDateString("en-CA")}<br>
+                                <strong>Time:</strong> ${event.requested_time}
+                                </p>
+                                <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(event.status)}">${event.status}</span></p>
+                                ${getActionButtons(event, true)}
+                            </div>
+                        </div>
+                    `;
+
                 });
             }
-    
+
             // ✅ Initialize table with recent events
             updateEventTable("recent");
-    
+
             // ✅ Update table when dropdown changes
             eventDropdown.addEventListener("change", function () {
                 updateEventTable(eventDropdown.value);
 
-                
+
             });
         });
 
@@ -488,8 +572,8 @@
                 })
                 .catch(error => console.error("Error:", error));
         }
-        function changePassword(){
-            
+        function changePassword() {
+
         }
 
         function updateNotificationBadge() {
@@ -508,7 +592,7 @@
                 .catch(error => console.error("Error fetching notifications:", error));
         }
     </script>
-    
+
 
 </body>
 
