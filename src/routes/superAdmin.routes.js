@@ -1,6 +1,5 @@
 import express from "express";
 import { verifyJWT } from '../middlewares/auth.middleware.js';
-import { authorizeRoles } from '../middlewares/authorizeRole.middleware.js';
 import { addAdmin, deleteAdmin, getAdmin, getAllAdmins, superAdminDashboard, updateAdmin } from "../controllers/superAdmin.controllers.js";
 
 const router = express.Router();
