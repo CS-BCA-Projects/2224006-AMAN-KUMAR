@@ -141,7 +141,7 @@
                                 <label class="form-check-label" for="rememberMe">Remember me</label>
                             </div>
                             <p class="mt-2 acc">Don't have an account? <a href="sign-up">Sign-up</a> | <a
-                                    href="http://localhost:4001/api/v1/login/reset-password">Forgot password</a></p>
+                                    href="/api/v1/login/reset-password">Forgot password</a></p>
                         </form>
                     </div>
                 </div>
@@ -157,7 +157,7 @@
             const password = document.getElementById('password').value;
 
             try {
-                const response = await fetch("http://localhost:4001/api/v1/login", {
+                const response = await fetch("/api/v1/login", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
