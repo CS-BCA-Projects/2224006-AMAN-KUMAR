@@ -12,7 +12,7 @@ dotenv.config({
 
 connectDB()
 .then(() =>{
-    app.listen(port,() => {
+    app.listen(port, '0.0.0.0',() => {
         console.log(`Sever is running on port : http://localhost:${port}`)
     })
 }).catch((err) => {
