@@ -128,6 +128,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
         const options = {
             httpOnly: true,
             secure: true,
+            sameSite: "None", 
         };
 
         // Fetch newly created user
@@ -236,7 +237,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: false,
+        sameSite: "Lax", 
     }
 
     //Set up session (implementation not shown)
@@ -285,6 +287,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
+        sameSite: "None", 
         secure: true
     }
 
@@ -321,6 +324,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         const options = {
             httpOnly: true,
+            sameSite: "None", 
             secure: true
         }
 
