@@ -778,11 +778,33 @@ const cancelEventRequest = asyncHandler(async (req, res) => {
 })
 
 const about = asyncHandler(async (req, res) => {
-    res.render('aboutPage')
+    let homeUrl = '';
+    switch (req.user.role) {
+        case 'User':
+            homeUrl = '/api/v1/user-dashboard'
+            break;
+        case 'SPHead':
+            homeUrl = "/api/v1/spHead-dashboard";
+            break;
+        default :
+        return res.status(403).json({ success: false, message: "Unauthorized access" });
+    }
+    res.render('aboutPage',{homeUrl})
 });
 
 const contactPage = asyncHandler(async (req, res) => {
-    res.render('contactPage')
+    let homeUrl = '';
+    switch (req.user.role) {
+        case 'User':
+            homeUrl = '/api/v1/user-dashboard'
+            break;
+        case 'SPHead':
+            homeUrl = "/api/v1/spHead-dashboard";
+            break;
+        default :
+        return res.status(403).json({ success: false, message: "Unauthorized access" });
+    }
+    res.render('contactPage',{homeUrl})
 });
 
 const sendMessage = asyncHandler(async(req,res) => {

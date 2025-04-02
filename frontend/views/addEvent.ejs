@@ -47,16 +47,19 @@
             color: white;
             font-weight: bold;
         }
+
         @media (max-width : 991px) {
             #menu-bar-box {
                 background-color: #0000ff;
             }
-            .navbar-collapse{
+
+            .navbar-collapse {
                 position: absolute;
                 z-index: 100;
                 top: 60px;
                 left: 80%;
             }
+
             #menu-bar-box a {
                 color: black;
                 padding: 15px;
@@ -81,9 +84,7 @@
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/user-dashboard">Home</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="api/v1/about">About</a></li>
                 <li class="nav-item"><a class="nav-link text-white" href="/api/v1/contact">Contact</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="#">Help</a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-bell"></i></a></li>
-                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-user-circle"></i></a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/api/v1/help">Help</a></li>
             </ul>
         </div>
     </nav>
@@ -98,17 +99,33 @@
                     <form>
                         <!-- Event Dropdown -->
                         <div class="mb-3">
-                            <select class="form-select form-control " name="eventType" required>
-                                <option selected disabled>Event</option>
+                            <select class="form-select form-control" name="eventType" required>
+                                <option selected disabled>Select Event</option>
                                 <option value="Yagya">Yagya</option>
                                 <option value="Deep Yagya">Deep Yagya</option>
                                 <option value="Lecture">Lecture</option>
+                                <option value="Garbhadhan">Garbhadhan</option>
+                                <option value="Punsavan">Punsavan</option>
+                                <option value="Simantonayan">Simantonayan</option>
+                                <option value="Jatkarma">Jatkarma</option>
+                                <option value="Namkaran">Namkaran</option>
+                                <option value="Nishkramana">Nishkramana</option>
+                                <option value="Annaprashan">Annaprashan</option>
+                                <option value="Chaul">Chaul</option>
+                                <option value="Vidyarambh">Vidyarambh</option>
+                                <option value="Karnavedh">Karnavedh</option>
+                                <option value="Upanayan">Upanayan</option>
+                                <option value="Vedarambha">Vedarambha</option>
+                                <option value="Keshanta">Keshanta</option>
+                                <option value="Samavartan">Samavartan</option>
+                                <option value="Vivah">Vivah</option>
+                                <option value="Anthyeshti">Anthyeshti</option>
                             </select>
                         </div>
 
                         <!-- Date Input -->
                         <div class="mb-3 input-group">
-                            <input type="date" class="form-control" name="eventDate" required>
+                            <input type="date" class="form-control" name="eventDate" id="eventDate" required>
                             <i class="fas fa-calendar-alt"></i>
                         </div>
 
@@ -153,6 +170,10 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            let today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+            document.getElementById("eventDate").setAttribute("min", today); // Set min attribute
+        });
+        document.addEventListener("DOMContentLoaded", function () {
             const form = document.querySelector("form");
 
             form.addEventListener("submit", async function (event) {
@@ -171,7 +192,7 @@
                         headers: {
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify({eventType,requested_date,requested_time,description}) // Send JSON data
+                        body: JSON.stringify({ eventType, requested_date, requested_time, description }) // Send JSON data
                     });
 
                     const data = await response.json();

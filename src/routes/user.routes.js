@@ -35,8 +35,8 @@ router.delete("/cancel/:eventId",verifyJWT,cancelEventRequest)
 
 // Protected Routes
 router.get("/user-dashboard", verifyJWT, authorizeRoles("User"), userDashboard);
-router.get("/about",about);
-router.get('/contact',contactPage)
+router.get("/about",verifyJWT,about);
+router.get('/contact',verifyJWT,contactPage)
 router.route('/notifications').get(verifyJWT,getUserNotifications)
 router.route('/notifications/:id').delete(verifyJWT,deleteNotification)
 router.route('/notifications/count').get(verifyJWT,notificationCount)
