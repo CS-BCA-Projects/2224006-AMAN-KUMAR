@@ -97,7 +97,7 @@ const getSPHeads = asyncHandler(async (req, res) => {
     const userState = req.user.state
     const spHeads = await User.find({ role: "SPHead" , state : userState})
         .select("name email phone state district pinCode address lat lon");
-    res.render("spheadAdminControl", { spHeads, user });
+    res.render("spHeadAdminControl", { spHeads, user });
 });
 // ✅ Create a new SPHead
 const createSPHead = asyncHandler(async (req, res) => {
