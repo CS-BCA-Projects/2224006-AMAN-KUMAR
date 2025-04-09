@@ -128,8 +128,8 @@ const verifyEmail = asyncHandler(async (req, res) => {
         // Secure cookie options
         const options = {
             httpOnly: true,
-            secure: true,
-            sameSite: "None", 
+            secure: false,
+            sameSite: "Lax", 
         };
 
         // Fetch newly created user
@@ -146,7 +146,6 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
         res.cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
-
             .redirect(`/api/v1/contact-details`);
 
     } catch (error) {
@@ -288,8 +287,8 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        sameSite: "None", 
-        secure: true
+        secure: false,
+        sameSite: "Lax", 
     }
 
     return res.status(200)
@@ -325,8 +324,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         const options = {
             httpOnly: true,
-            sameSite: "None", 
-            secure: true
+            secure: false,
+            sameSite: "Lax", 
         }
 
         const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
