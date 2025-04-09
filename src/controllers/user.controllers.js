@@ -147,7 +147,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
         res.cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
 
-            .redirect(`http://localhost:4001/api/v1/contact-details`);
+            .redirect(`/api/v1/contact-details`);
 
     } catch (error) {
         console.error("Error in email verification:", error);
