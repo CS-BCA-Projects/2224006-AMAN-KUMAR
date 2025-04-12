@@ -1,5 +1,5 @@
 import express from "express";
-import { createSPHead, deleteSPHead, getSPHeadDetails, getSPHeads, updateSPHead } from "../controllers/admin.controllers.js";
+import { createSPHead, deleteSPHead, getSPHeadDetails, getSPHeads, getUnassignedRequests, updateSPHead } from "../controllers/admin.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../middlewares/authorizeRole.middleware.js";
 
@@ -15,5 +15,6 @@ router.route("/sphead-control").get(verifyJWT,authorizeRoles("Admin"),getSPHeads
 router.route("/spheads/add").post(verifyJWT,authorizeRoles("Admin"),createSPHead);    // Create a new SPHead
 router.route("/spheads/update/:id").put(verifyJWT, authorizeRoles("Admin"),updateSPHead); // Update an SPHead
 router.route("/spheads/delete/:id").delete(verifyJWT,authorizeRoles("Admin"), deleteSPHead); // Delete an SPHead
+router.route("/unassigned-requests").get(verifyJWT,authorizeRoles("Admin"),getUnassignedRequests)
 
 export default router;

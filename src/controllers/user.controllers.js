@@ -13,6 +13,7 @@ import { getMatchingSPHeads } from '../utils/getMatchingSPHeads.js';
 import { haversineDistance } from '../utils/haversineDistance.js';
 import { sendNotification } from '../utils/sendNotification.js';
 import { updateExpiredEvents } from '../utils/updateExpiredEvents.js';
+import UnassignedEventRequest from '../models/UnassignedEventRequest.js';
 
 
 // Temporary storage for unverified users
@@ -129,7 +130,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
         const options = {
             httpOnly: true,
             secure: false,
-            sameSite: "Lax", 
+            sameSite: "Lax",
         };
 
         // Fetch newly created user
@@ -174,7 +175,7 @@ const feedContact = asyncHandler(async (req, res) => {
     if ([name, address, state, district, pinCode, phone].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All Fields are required");
     }
-    
+
     try {
         // Await the function call to get latitude & longitude
         const location = await findLanLon(pinCode);
@@ -238,7 +239,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: false,
-        sameSite: "Lax", 
+        sameSite: "Lax",
     }
 
     //Set up session (implementation not shown)
@@ -257,9 +258,9 @@ const loginUser = asyncHandler(async (req, res) => {
             break;
         case 'Admin':
             res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json({ success: true, redirectUrl: "/api/v1/admin/dashboard" });
+                .cookie("accessToken", accessToken, options)
+                .cookie("refreshToken", refreshToken, options)
+                .json({ success: true, redirectUrl: "/api/v1/admin/dashboard" });
             break;
         case 'SuperAdmin':
             res.status(200)
@@ -288,7 +289,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: false,
-        sameSite: "Lax", 
+        sameSite: "Lax",
     }
 
     return res.status(200)
@@ -325,7 +326,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         const options = {
             httpOnly: true,
             secure: false,
-            sameSite: "Lax", 
+            sameSite: "Lax",
         }
 
         const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
@@ -589,7 +590,7 @@ const userDashboard = asyncHandler(async (req, res) => {
                         $filter: {
                             input: "$allEvents",
                             as: "event",
-                            cond: { $in: ["$$event.status", ["Pending", "Assigned","Approved"]] }
+                            cond: { $in: ["$$event.status", ["Pending", "Assigned", "Approved"]] }
                         }
                     },
                     completedEventRequest: {
@@ -672,22 +673,19 @@ const registerEvent = asyncHandler(async (req, res) => {
         const spHeads = await getMatchingSPHeads(state, district);
 
         if (!spHeads || spHeads.length === 0) {
-            return null;
+            nearestSPHead = null;
         }
-
-        for (const spHead of spHeads) {
-            const distance = haversineDistance(lat, lon, spHead.lat, spHead.lon);
-            if (distance === 0) nearestSPHead = spHead;
-
-            if (distance <= 15 && distance < minDistance) {
-                minDistance = distance;
-                nearestSPHead = spHead;
+        else {
+            for (const spHead of spHeads) {
+                const distance = haversineDistance(lat, lon, spHead.lat, spHead.lon);
+                if (distance === 0) nearestSPHead = spHead;
+    
+                if (distance <= 15 && distance < minDistance) {
+                    minDistance = distance;
+                    nearestSPHead = spHead;
+                }
             }
         }
-
-        if (!nearestSPHead) {
-            throw new ApiError(400,"No SPHead found within 15 km range.");
-        } 
     } catch (error) {
         console.error("Error in getNearestSPHead:", error);
         throw new ApiError(500, "Something went wrong, please retry");
@@ -696,7 +694,22 @@ const registerEvent = asyncHandler(async (req, res) => {
     const eventAssignedTo = nearestSPHead;
 
     if (!eventAssignedTo) {
-        return res.status(200).json(new ApiResponse(200, {}, "Event request is not available at your place"));
+        // Store the request in unassigned collection
+        await UnassignedEventRequest.create({
+            requestedBy: user._id,
+            eventType,
+            requested_date,
+            requested_time,
+            description,
+            userLocation: {
+                lat,
+                lon,
+                state,
+                district
+            }
+        });
+
+        return res.status(200).json(new ApiResponse(200, {}, "No SPHead available in your area. Your request has been recorded and will be processed when someone becomes available."));
     }
 
     const requestedEvent = await EventRequest.create({
@@ -753,7 +766,7 @@ const updateEventDetails = asyncHandler(async (req, res) => {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
         await sendNotification(updatedEvent.requestedBy, `Event is successfully updated`);
-        await sendNotification(updatedEvent.assignedTo, `A event has been updated for ${updatedEvent.eventType} for Date : ${updatedEvent.requested_date}`)
+        await sendNotification(updatedEvent.assignedTo, `An event has been updated for ${updatedEvent.eventType} for Date : ${updatedEvent.requested_date}`)
         res.status(200).json({ success: true, message: "Event updated successfully", updatedEvent });
     } catch (error) {
         res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -786,10 +799,10 @@ const about = asyncHandler(async (req, res) => {
         case 'SPHead':
             homeUrl = "/api/v1/spHead-dashboard";
             break;
-        default :
-        return res.status(403).json({ success: false, message: "Unauthorized access" });
+        default:
+            return res.status(403).json({ success: false, message: "Unauthorized access" });
     }
-    res.render('aboutPage',{homeUrl})
+    res.render('aboutPage', { homeUrl })
 });
 
 const contactPage = asyncHandler(async (req, res) => {
@@ -801,16 +814,16 @@ const contactPage = asyncHandler(async (req, res) => {
         case 'SPHead':
             homeUrl = "/api/v1/spHead-dashboard";
             break;
-        default :
-        return res.status(403).json({ success: false, message: "Unauthorized access" });
+        default:
+            return res.status(403).json({ success: false, message: "Unauthorized access" });
     }
-    res.render('contactPage',{homeUrl})
+    res.render('contactPage', { homeUrl })
 });
 
-const sendMessage = asyncHandler(async(req,res) => {
-    const {name , email, subject, message } = req.body;
+const sendMessage = asyncHandler(async (req, res) => {
+    const { name, email, subject, message } = req.body;
 
-    if(!name ||  !email || !subject, !message ){
+    if (!name || !email || !subject, !message) {
         throw new ApiError(400, "All fields are required");
     }
 
@@ -827,11 +840,11 @@ const sendMessage = asyncHandler(async(req,res) => {
         </div>`
     );
 
-    if(!emailSent){
+    if (!emailSent) {
         throw new ApiError(500, "Unable to send the email")
     }
 
-    return res.status(200).json(new ApiResponse(200,{},"Response send to the team members")) 
+    return res.status(200).json(new ApiResponse(200, {}, "Response send to the team members"))
 })
 const spHeadDashboard = asyncHandler(async (req, res) => {
     const spHeadId = req.user._id.toString(); // Convert to String to match assignedTo
@@ -897,7 +910,7 @@ const spHeadDashboard = asyncHandler(async (req, res) => {
                     recentEventRequests: {
                         $push: {
                             $cond: {
-                                if: { $in: ["$status", ["Pending", "Assigned","Approved"]] },
+                                if: { $in: ["$status", ["Pending", "Assigned", "Approved"]] },
                                 then: "$allEvents",
                                 else: "$$REMOVE"
                             }

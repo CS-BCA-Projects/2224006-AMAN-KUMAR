@@ -1,4 +1,5 @@
 import User from "../models/user.models.js";
+import UnassignedEventRequest from "../models/UnassignedEventRequest.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { findLanLon } from "../utils/extractLatLon.js";
@@ -173,10 +174,29 @@ const deleteSPHead = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "SPHead deleted successfully" });
 });
 
+const getUnassignedRequests = asyncHandler(async (req, res) => {
+    const adminState = req.user.state;
+
+    if (!adminState) {
+        return res.status(400).json({ success: false, message: "Admin state not found" });
+    }
+
+    try {
+        const requests = await UnassignedEventRequest.find({ "userLocation.state": adminState })
+            .populate("requestedBy", "fullName email phone");
+
+        res.render('admin-unassigned',{adminState,requests})
+    } catch (error) {
+        console.error("Error fetching unassigned requests:", error);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
 export {
     getSPHeadDetails,
     deleteSPHead,
     updateSPHead,
     createSPHead,
-    getSPHeads
+    getSPHeads,
+    getUnassignedRequests
 };
