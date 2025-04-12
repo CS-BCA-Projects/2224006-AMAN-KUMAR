@@ -11,7 +11,7 @@ router.get("/login",login)
 router.get("/sign-up",signUp)
 router.get("/verifyEmailForSignup",verifyEmailPage)
 router.get("/contact-details",verifyJWT,contactDetails)
-router.get('/login/reset-password',resetPasswordPage)
+router.get('/login/reset-password',resetPassword)
 router.route("/register").post(registerUser);
 router.get("/register/verify-email", verifyEmail); // Verification route
 router.route("/submit-contactDetails").post(verifyJWT,feedContact);
