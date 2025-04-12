@@ -406,16 +406,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
         <a href="${verificationLink}">Verify Email</a>`
     );
 
-
-
     if (!emailSent) {
         unverifiedUsers.delete(verificationToken);
         throw new ApiError(500, "Error sending verification email");
     }
 
-    return res.status(200)
-        .json(new ApiResponse(200, {}, "Reset password link has been sent to your registered email Id"))
-
+    return res.status(200).json({success: true, message :"Email has been sent to reset the paasword",redirectUrl : "/api/v1/verifyEmailForSignup"})
+    
 })
 
 const resetPassword = asyncHandler(async (req, res) => {
@@ -461,9 +458,7 @@ const resetPassword = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while retrieving the saved user.");
     }
 
-    return res.status(201).json(
-        new ApiResponse(201, createdUser, "Email verified successfully. User password reset successfull.")
-    );
+    return res.redirect('/api/v1/login');
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
