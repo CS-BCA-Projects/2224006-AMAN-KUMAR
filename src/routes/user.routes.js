@@ -11,13 +11,13 @@ router.get("/login",login)
 router.get("/sign-up",signUp)
 router.get("/verifyEmailForSignup",verifyEmailPage)
 router.get("/contact-details",verifyJWT,contactDetails)
-router.get('/login/reset-password',resetPassword)
+router.get('/login/reset-password',resetPasswordPage)
 router.route("/register").post(registerUser);
 router.get("/register/verify-email", verifyEmail); // Verification route
 router.route("/submit-contactDetails").post(verifyJWT,feedContact);
 router.route("/login").post(loginUser)
 router.route("/login/forgot-password").post(forgotPassword)
-router.get("/login/reset-password",resetPassword)
+router.get("/login/resetPassword",resetPassword)
 
 router.get('/changePassword',verifyJWT,changePasswordPage)
 router.route("/change-password").put(verifyJWT,changeCurrentPassword)

@@ -398,7 +398,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     });
 
     // Send verification email
-    const verificationLink = `${process.env.CLIENT_URL_RESET_PASSWORD}/reset-password?token=${verificationToken}`;
+    const verificationLink = `${process.env.CLIENT_URL_RESET_PASSWORD}/resetPassword?token=${verificationToken}`;
     const emailSent = await sendEmail(
         email,
         "[AWGP Seva Portal] Please reset you password",
