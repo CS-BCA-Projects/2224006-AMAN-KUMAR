@@ -4,7 +4,7 @@ import { ApiError } from "./ApiError.js";
 
 const getMatchingSPHeads = async function (userState, userDistrict) {
     try {
-        const spHeads = await User.aggregate([
+        let spHeads = await User.aggregate([
             {
                 $match: { 
                     role: "SPHead", 
@@ -28,7 +28,7 @@ const getMatchingSPHeads = async function (userState, userDistrict) {
         ]);
 
         if (!spHeads.length) {
-            throw new ApiError(404, "No SPHeads found in this state and district.");
+            spHeads = null
         }
 
         return spHeads; // Returns an array of matching SPHeads

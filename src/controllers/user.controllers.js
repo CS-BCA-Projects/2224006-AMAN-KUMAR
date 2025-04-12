@@ -703,7 +703,7 @@ const registerEvent = asyncHandler(async (req, res) => {
             }
         });
 
-        return res.status(200).json(new ApiResponse(200, {}, "No SPHead available in your area. Your request has been recorded and will be processed when someone becomes available."));
+        return res.status(200).json({ success: true,message: "No SPHead available in your area. Your request has been recorded and will be determined when someone becomes available.", redirectUrl : `/api/v1/user-dashboard`});
     }
 
     const requestedEvent = await EventRequest.create({

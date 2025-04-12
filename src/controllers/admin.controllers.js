@@ -183,8 +183,7 @@ const getUnassignedRequests = asyncHandler(async (req, res) => {
 
     try {
         const requests = await UnassignedEventRequest.find({ "userLocation.state": adminState })
-            .populate("requestedBy", "fullName email phone");
-
+            .populate("requestedBy", "name email phone");
         res.render('admin-unassigned',{adminState,requests})
     } catch (error) {
         console.error("Error fetching unassigned requests:", error);
