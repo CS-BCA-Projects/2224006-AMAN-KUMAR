@@ -412,7 +412,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
     }
 
     return res.status(200).json({success: true, message :"Email has been sent to reset the paasword",redirectUrl : "/api/v1/verifyEmailForSignup"})
-    
 })
 
 const resetPassword = asyncHandler(async (req, res) => {
@@ -458,7 +457,7 @@ const resetPassword = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while retrieving the saved user.");
     }
 
-    return res.redirect('/api/v1/login');
+    res.redirect('/api/v1/login');
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
