@@ -74,29 +74,7 @@
 
     <p class="mt-5">
         ओं भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात्॥
-    </p>
-    <script>
-        try {
-            const response = await fetch("api/v1/register/verify-email", {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                alert(data.message)
-                // ✅ Redirect to verifyEmailForSignup page
-                window.location.href = data.redirectUrl;
-            } else {
-                alert(`Registration Failed: ${data.message}`);
-            }
-
-        } catch (error) {
-            console.error(error)
-            alert("Eroor", error)
-        }
-    </script>
+    </p>     
 </body>
 
 </html>

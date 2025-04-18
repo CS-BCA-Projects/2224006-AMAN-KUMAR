@@ -99,7 +99,7 @@
                 flex-direction: column;
             }
 
-            .signup-img{
+            .signup-img {
                 width: 60vw;
                 height: 70vh;
                 border-radius: 10px;
@@ -126,8 +126,9 @@
             <div class="signup-form">
                 <h4 class="mb-3">Sign-Up</h4>
                 <form class="signupForm">
-                    <div class="mb-3">
+                    <div class="mb-3 d-flex flex-column">
                         <input type="email" class="form-control fw-light" id="email" placeholder="Email" required>
+                        <p id="error" class="error" style="display: none; padding: 0; margin: 0;"></p>
                     </div>
                     <div class="mb-3">
                         <input type="password" class="form-control fw-light" id="password" placeholder="Password"
@@ -153,11 +154,13 @@
             event.preventDefault();
 
             const email = document.getElementById('email').value;
+            if(!validateEmail(email)){
+                return;
+            }
             const password = document.getElementById('password').value;
             const cnfPassword = document.getElementById('cnfPassword').value;
             const passError = document.querySelector('.pass');
 
-            // Reset error message
             passError.innerHTML = "";
 
             if (password !== cnfPassword) {
@@ -176,7 +179,6 @@
 
                 if (response.ok) {
                     alert(data.message)
-                    // ✅ Redirect to verifyEmailForSignup page
                     window.location.href = data.redirectUrl;
                 } else {
                     alert(`Registration Failed: ${data.message}`);
@@ -186,6 +188,29 @@
                 alert("Something went wrong. Please try again.");
             }
         });
+
+        function validateEmail(email) {
+            const error = document.getElementById('error');
+            error.style.display = "block"
+
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            const allowedDomains = ['gmail.com', 'yahoo.com'];
+
+            if (!regex.test(email)) {
+                error.textContent = "Please enter a valid email address.";
+                return false;
+            }
+
+            const domain = email.split('@')[1];
+            if (!allowedDomains.includes(domain)) {
+                error.textContent = `Email must be from valid domains `;
+                return false;
+            }
+
+            error.textContent = "";
+            return true;
+        }
 
     </script>
 </body>

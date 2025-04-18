@@ -69,7 +69,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // Send verification email
     const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
-    console.log(verificationLink)
     const emailSent = await sendEmail(
         email,
         "Verify Your Email",
