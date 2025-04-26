@@ -496,7 +496,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
-                        alert(data.message); // ✅ Show success message
+                        alert(data.message); //   Show success message
                     } else {
                         alert("Error updating SPHead");
                     }
@@ -571,7 +571,7 @@
                         throw new Error(data.message || "Failed to add SPHead");
                     }
 
-                    alert("✅ SPHead added successfully!");
+                    alert("  SPHead added successfully!");
                     closeOverlay();
                     location.reload(); // Reload to reflect changes
                 })
@@ -591,8 +591,8 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    alert(data.message); // ✅ Show success or error message from the backend
-                    location.reload(); // ✅ Reload the page to reflect changes
+                    alert(data.message); //   Show success or error message from the backend
+                    location.reload(); //   Reload the page to reflect changes
                 })
                 .catch(error => {
                     console.error("Error deleting SPHead:", error);

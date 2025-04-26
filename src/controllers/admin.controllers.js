@@ -16,10 +16,10 @@ const getSPHeadDetails = asyncHandler(async (req, res) => {
     const endDate = new Date(`${year}-${month}-31T23:59:59.999Z`);
 
     const spHeadDetails = await User.aggregate([
-        // ✅ Match only SPHeads in the given state
+        //  Match only SPHeads in the given state
         { $match: { role: "SPHead", state: state } },
 
-        // ✅ Convert `assignedTo` in `EventRequest` to ObjectId and Lookup Events
+        // Convert `assignedTo` in `EventRequest` to ObjectId and Lookup Events
         {
             $lookup: {
                 from: "eventrequests",
@@ -36,7 +36,7 @@ const getSPHeadDetails = asyncHandler(async (req, res) => {
             }
         },
 
-        // ✅ Compute event counts
+        // Compute event counts
         {
             $addFields: {
                 totalEvents: { $size: "$events" },
@@ -70,7 +70,7 @@ const getSPHeadDetails = asyncHandler(async (req, res) => {
             }
         },
 
-        // ✅ Project required fields including PIN Code
+        //  Project required fields including PIN Code
         {
             $project: {
                 _id: 1,
@@ -92,7 +92,7 @@ const getSPHeadDetails = asyncHandler(async (req, res) => {
     res.status(200).json(spHeadDetails);
 });
 
-// ✅ Fetch all SPHeads
+//   Fetch all SPHeads
 const getSPHeads = asyncHandler(async (req, res) => {
     const user = req.user;
     const userState = req.user.state
@@ -100,7 +100,7 @@ const getSPHeads = asyncHandler(async (req, res) => {
         .select("name email phone state district pinCode address lat lon");
     res.render("spHeadAdminControl", { spHeads, user });
 });
-// ✅ Create a new SPHead
+//   Create a new SPHead
 const createSPHead = asyncHandler(async (req, res) => {
     const { name, email, phone, state, district, pinCode, address } = req.body;
 
@@ -142,7 +142,7 @@ const createSPHead = asyncHandler(async (req, res) => {
 
 });
 
-// ✅ Update an SPHead
+// Update an SPHead
 const updateSPHead = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { name, email, phone, address } = req.body;
@@ -162,7 +162,7 @@ const updateSPHead = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "SPHead updated successfully", updatedSPHead });
 });
 
-// ✅ Delete an SPHead
+//   Delete an SPHead
 const deleteSPHead = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const deletedSPHead = await User.findByIdAndDelete(id);

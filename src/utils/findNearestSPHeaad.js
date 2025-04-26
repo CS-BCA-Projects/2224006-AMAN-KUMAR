@@ -24,10 +24,10 @@ const getNearestSPHead = asyncHandler(async function (...userLocation) {
         for (const spHead of spHeads) {
             const distance = haversineDistance(userLat, userLon, spHead.lat, spHead.lon);
 
-            // ✅ If distance is 0, immediately return (Exact match)
+            //   If distance is 0, immediately return (Exact match)
             if (distance === 0) return spHead;
 
-            // ✅ Ensure the SPHead is within 15 km and closest so far
+            //   Ensure the SPHead is within 15 km and closest so far
             if (distance <= 15 && distance < minDistance) {
                 minDistance = distance;
                 nearestSPHead = spHead;

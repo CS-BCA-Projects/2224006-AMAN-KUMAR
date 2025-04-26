@@ -81,7 +81,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Error sending verification email");
     }
 
-    // ✅ Redirect to verifyEmailForSignup page
+    //   Redirect to verifyEmailForSignup page
     res.status(200).json({
         success: true,
         message: "Verification email sent!",
@@ -424,7 +424,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     // Check if the token is expired
     if (!storedUser || storedUser.verificationTokenExpires < Date.now()) {
-        unverifiedUsers.delete(token); // ✅ Remove expired token
+        unverifiedUsers.delete(token); //   Remove expired token
         throw new ApiError(400, "Invalid or expired token");
     }
 
@@ -559,7 +559,7 @@ const getLoggedInUserDetails = asyncHandler(async (req, res) => {
 
 const userDashboard = asyncHandler(async (req, res) => {
     const user = req.user;
-    const userId = user._id.toString(); // ✅ Convert ObjectId to String
+    const userId = user._id.toString(); //   Convert ObjectId to String
 
     await updateExpiredEvents(userId); // Check & reject expired events
     try {

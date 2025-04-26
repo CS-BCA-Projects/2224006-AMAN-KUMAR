@@ -28,9 +28,9 @@ const createSuperAdmin = async () => {
                 isVerified: true
             });
 
-            console.log("✅ SuperAdmin created successfully!");
+            console.log("  SuperAdmin created successfully!");
         } else {
-            console.log("✅ SuperAdmin already exists.");
+            console.log("  SuperAdmin already exists.");
         }
         
         mongoose.connection.close();

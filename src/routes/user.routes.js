@@ -27,7 +27,7 @@ router.route("/logout").post(verifyJWT, logoutUser)
 router.route("/refresh-token",refreshAccessToken)
 router.route('/add-event').post(verifyJWT,registerEvent);
 
-// ✅ Route to get event details for update page
+//   Route to get event details for update page
 router.get("/update-event/:eventId", verifyJWT,renderUpdatePage);
 router.put("/update/:eventId",verifyJWT, updateEventDetails);
 router.delete("/cancel/:eventId",verifyJWT,cancelEventRequest)

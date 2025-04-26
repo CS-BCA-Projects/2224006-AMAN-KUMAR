@@ -414,7 +414,7 @@
             const eventTableBody = document.getElementById("eventTableBody");
             const eventCardsContainer = document.getElementById("eventCardsContainer")
 
-            // ✅ Fix: Wrap JSON data in quotes
+            //   Fix: Wrap JSON data in quotes
             const user = JSON.parse('<%- JSON.stringify(user) %>');
             const recentEvents = JSON.parse('<%- JSON.stringify(recentEvents) %>');
             const completedEvents = JSON.parse('<%- JSON.stringify(completedEvents) %>');
@@ -543,10 +543,10 @@
             const closeOverlayBtn = document.getElementById("closeOverlay");
             const userDetailsOverlay = document.getElementById("userDetailsOverlay");
 
-            // ✅ Use the user data from EJS
+            //   Use the user data from EJS
             const user = JSON.parse('<%- JSON.stringify(user) %>');
 
-            // ✅ Show User Details **Only When Button is Clicked**
+            //   Show User Details **Only When Button is Clicked**
             showDetailsBtn.addEventListener("click", function () {
                 document.getElementById("overlayUserName").textContent = user.name || "Not Provided";
                 document.getElementById("overlayUserAddress").textContent = user.address || "Not Provided";
@@ -557,7 +557,7 @@
                 userDetailsOverlay.style.display = "flex"; // Show overlay only when clicked
             });
 
-            // ✅ Close Overlay on Click
+            //   Close Overlay on Click
             closeOverlayBtn.addEventListener("click", function () {
                 userDetailsOverlay.style.display = "none"; // Hide overlay
             });

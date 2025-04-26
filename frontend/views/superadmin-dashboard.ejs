@@ -308,7 +308,7 @@
         </div>
 
 
-        <!-- ✅ Mobile View Cards -->
+        <!--   Mobile View Cards -->
         <div class="d-block d-md-none">
             <h5 class="text-center bg-primary text-white p-2 rounded mt-4" >Details</h5>
             <div id="adminMobileView">
@@ -475,7 +475,7 @@
                         return;
                     }
 
-                    // ✅ Fill the modal with admin details
+                    //   Fill the modal with admin details
                     document.getElementById("editAdminId").value = admin._id;
                     document.getElementById("editAdminName").value = admin.name || "";
                     document.getElementById("editAdminEmail").value = admin.email || "";
@@ -484,13 +484,13 @@
                     document.getElementById("editAdminPinCode").value = admin.pinCode || "";
                     document.getElementById("editAdminState").value = admin.state || "";
 
-                    // ✅ Open the modal
+                    //   Open the modal
                     document.getElementById("editAdminModal").style.display = "block";
                 })
                 .catch(error => console.error("Error fetching admin details:", error));
         }
 
-        // ✅ Function to save updated admin details
+        //   Function to save updated admin details
         function saveAdminChanges() {
             const adminId = document.getElementById("editAdminId").value;
             const updatedAdmin = {
@@ -511,12 +511,12 @@
                 .then(() => {
                     alert("Admin updated successfully!");
                     closeEditModal();
-                    fetchAdmins(); // ✅ Refresh the admin list
+                    fetchAdmins(); //   Refresh the admin list
                 })
                 .catch(error => console.error("Error updating admin:", error));
         }
 
-        // ✅ Close Edit Modal
+        //   Close Edit Modal
         function closeEditModal() {
             document.getElementById("editAdminModal").style.display = "none";
         }

@@ -386,11 +386,11 @@
                     if (data.error) {
                         alert(data.error);
                     } else {
-                        // ✅ Update event status text and color
+                        //   Update event status text and color
                         document.getElementById(`status-${eventId}`).textContent = status;
                         document.getElementById(`status-${eventId}`).className = `event-status ${status.toLowerCase()}`;
 
-                        // ✅ Update action buttons dynamically
+                        //   Update action buttons dynamically
                         if (status === "Approved") {
                             document.getElementById(`actions-${eventId}`).innerHTML =
                                 `<button class="btn btn-success" onclick="updateEventStatus('${eventId}', 'Completed')">
@@ -411,7 +411,7 @@
             const eventTableBody = document.getElementById("eventTableBody");
             const eventCardsContainer = document.getElementById("eventCardsContainer")
 
-            // ✅ Ensure JSON data is correctly embedded in EJS
+            //   Ensure JSON data is correctly embedded in EJS
             const recentEvents = JSON.parse('<%- JSON.stringify(recentEventRequests) %>');
             const completedEvents = JSON.parse('<%- JSON.stringify(completedEventRequests) %>');
             const rejectedEvents = JSON.parse('<%- JSON.stringify(rejectedEventRequests) %>');
@@ -524,10 +524,10 @@
                 });
             }
 
-            // ✅ Initialize table with recent events
+            //   Initialize table with recent events
             updateEventTable("recent");
 
-            // ✅ Update table when dropdown changes
+            //   Update table when dropdown changes
             eventDropdown.addEventListener("change", function () {
                 updateEventTable(eventDropdown.value);
 
