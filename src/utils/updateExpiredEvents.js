@@ -12,18 +12,24 @@ const updateExpiredEvents = async (userId) => {
     try {
         const currentDate = new Date();
         const currentHour = currentDate.getHours();
+        const userIdStr = userId.toString();
 
         // Find all pending events where the user is either:
         // - The requester (`requestedBy`)
         // - The assigned SPHead (`assignedTo`)
-        const pendingEvents = await EventRequest.find({
-            status: "Assigned",
-            $or: [
-                { requestedBy: userId },
-                { assignedTo: userId }
-            ]
-        });
-
+        const pendingEvents = await EventRequest.aggregate([
+            {
+              $match: {
+                status: { $in: ["Pending", "Approved", "Assigned"] },
+                $or: [
+                  { requestedBy: userIdStr },
+                  { assignedTo: userIdStr }
+                ]
+              }
+            }
+          ]);
+          
+        console.log("pending events are : ",pendingEvents)
         let expiredEventIds = [];
 
         pendingEvents.forEach(event => {

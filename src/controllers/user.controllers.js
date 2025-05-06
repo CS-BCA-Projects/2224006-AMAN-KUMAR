@@ -241,15 +241,16 @@ const loginUser = asyncHandler(async (req, res) => {
         sameSite: "Lax",
     }
 
-    //Set up session (implementation not shown)
     switch (user.role) {
         case 'User':
+            await updateExpiredEvents(user._id); // Check & reject expired events
             res.status(200)
                 .cookie("accessToken", accessToken, options)
                 .cookie("refreshToken", refreshToken, options)
                 .json({ success: true, redirectUrl: "/api/v1/user-dashboard" });
             break;
         case 'SPHead':
+            await updateExpiredEvents(user._id); // Check & reject expired events
             res.status(200)
                 .cookie("accessToken", accessToken, options)
                 .cookie("refreshToken", refreshToken, options)
@@ -410,7 +411,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Error sending verification email");
     }
 
-    return res.status(200).json({success: true, message :"Email has been sent to reset the paasword",redirectUrl : "/api/v1/verifyEmailForSignup"})
+    return res.status(200).json({ success: true, message: "Email has been sent to reset the paasword", redirectUrl: "/api/v1/verifyEmailForSignup" })
 })
 
 const resetPassword = asyncHandler(async (req, res) => {
@@ -560,8 +561,6 @@ const getLoggedInUserDetails = asyncHandler(async (req, res) => {
 const userDashboard = asyncHandler(async (req, res) => {
     const user = req.user;
     const userId = user._id.toString(); //   Convert ObjectId to String
-
-    await updateExpiredEvents(userId); // Check & reject expired events
     try {
         const userDetails = await User.aggregate([
             {
@@ -672,7 +671,7 @@ const registerEvent = asyncHandler(async (req, res) => {
             for (const spHead of spHeads) {
                 const distance = haversineDistance(lat, lon, spHead.lat, spHead.lon);
                 if (distance === 0) nearestSPHead = spHead;
-    
+
                 if (distance <= 15 && distance < minDistance) {
                     minDistance = distance;
                     nearestSPHead = spHead;
@@ -702,7 +701,7 @@ const registerEvent = asyncHandler(async (req, res) => {
             }
         });
 
-        return res.status(200).json({ success: true,message: "No SPHead available in your area. Your request has been recorded and will be determined when someone becomes available.", redirectUrl : `/api/v1/user-dashboard`});
+        return res.status(200).json({ success: true, message: "No SPHead available in your area. Your request has been recorded and will be determined when someone becomes available.", redirectUrl: `/api/v1/user-dashboard` });
     }
 
     const requestedEvent = await EventRequest.create({
